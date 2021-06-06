@@ -37,9 +37,12 @@ function get_room_users(room) {
     });
 }
 
-// Get new question
-function get_new_question(ten_questions) {
-  return;
+// Shuffle an array
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }
 
 module.exports = {
@@ -47,4 +50,5 @@ module.exports = {
   user_leave,
   get_room_users,
   set_score_zero,
+  shuffle,
 };

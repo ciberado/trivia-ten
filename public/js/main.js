@@ -37,29 +37,46 @@ startgame_btn.addEventListener("click", function () {
   socket.emit("start_game", category_selected);
 });
 
-const wait_text = document.getElementById("wait_text");
-const newquestion_btn = document.getElementById("newquestion_btn");
-newquestion_btn.addEventListener("click", function () {
-  socket.emit("new_question");
-  wait_text.innerHTML = "Asking for new question";
-});
-
-socket.on("new_question_show", (question) => {
-  console.log("new question received from server");
-  wait_text.innerHTML = question;
-});
-
 // Display question
 const number_text = document.getElementById("number_text");
+const difficulty_text = document.getElementById("difficulty_text");
 const category_text = document.getElementById("category_text");
-const question_text = document.getElementById("question_div");
-const choice1_text = document.getElementById("choice1_text");
-const choice2_text = document.getElementById("choice2_text");
-const choice3_text = document.getElementById("choice3_text");
-const choice4_text = document.getElementById("choice4_text");
+const question_text = document.getElementById("question_text");
+const choice_buttons = document.getElementsByClassName("question__choice");
+const choice0_text = document.getElementById("0");
+const choice1_text = document.getElementById("1");
+const choice2_text = document.getElementById("2");
+const choice3_text = document.getElementById("3");
 socket.on(
   "show_question",
-  (number, difficulty, category, question, choices) => {
-    console.log(number, difficulty, category, question, choices);
+  ({ number, difficulty, category, question, choices }) => {
+    // Enable buttons
+    for (let i = 0; i < choice_buttons.length; i++) {
+      choice_buttons[i].disabled = false;
+    }
+
+    // Show text
+    number_text.innerHTML = number;
+    difficulty_text.innerHTML = difficulty;
+    category_text.innerHTML = category;
+    question_text.innerHTML = question;
+    choice0_text.innerHTML = choices[0];
+    choice1_text.innerHTML = choices[1];
+    choice2_text.innerHTML = choices[2];
+    choice3_text.innerHTML = choices[3];
   }
 );
+
+// Show user choice and send it to server
+function submit_choice(choice_id) {
+  // Show choice
+  document.getElementById(choice_id).style.backgroundColor = "blue";
+
+  // Disable buttons
+  for (let i = 0; i < choice_buttons.length; i++) {
+    choice_buttons[i].disabled = true;
+  }
+
+  // Send choice to server
+  socket.emit("send_choice", choice_id);
+}

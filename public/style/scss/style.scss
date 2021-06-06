@@ -163,19 +163,21 @@ a {
     font-size: 1.6rem;
     border-radius: 1rem;
     .question__infobox {
+      display: grid;
+      place-items: center;
       position: absolute;
       top: -2rem;
       left: 0;
       right: 0;
       background-color: #cfcfcf;
       margin: auto;
-      width: 9rem;
+      width: 14rem;
       height: 3rem;
       font-size: 1rem;
       font-weight: 700;
       border-radius: 0.5rem;
       text-align: center;
-      padding: 0.6rem 2rem;
+      padding: 0.6rem 1rem;
       .question__info {
         padding: 0;
         margin: 0;

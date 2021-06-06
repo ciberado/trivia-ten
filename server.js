@@ -13,6 +13,7 @@ const {
   user_leave,
   get_room_users,
   set_score_zero,
+  shuffle,
 } = require("./functions");
 
 // Set static folder
@@ -38,9 +39,11 @@ io.on("connection", (socket) => {
     // When leader starts game
     socket.on("start_game", (category_selected) => {
       console.log(`⚠ Start game requested from user`);
+      let i = 0;
       let ten_questions;
-      let index_question = 0;
       let current_question;
+      let correct_response;
+      let responses;
 
       // Retrieve ten questions from api
       let api_url = `https://opentdb.com/api.php?amount=10&type=multiple&category=${category_selected}`;
@@ -51,18 +54,36 @@ io.on("connection", (socket) => {
           ten_questions = json.results;
 
           // Display questions while it's less than 10
-          while (index_question < 10) {
+          while (i < 10) {
             // Get next question
-            current_question = ten_questions[index_question];
+            current_question = ten_questions[i];
             console.log(`⚠ Current question is: ${current_question.question}`);
+
+            // Get shuffled responses and correct one
+            correct_response = current_question.correct_answer;
+            responses = [
+              current_question.correct_answer,
+              ...current_question.incorrect_answers,
+            ];
+            shuffle(responses);
 
             // Set all scores to zero
             set_score_zero(room);
 
             // Display question
-            io.in(room).emit("show_question", { current_question });
+            io.in(room).emit("show_question", {
+              number: i,
+              difficulty: current_question.difficulty,
+              category: current_question.category,
+              question: current_question.question,
+              choices: responses,
+            });
 
-            index_question++;
+            // Receive user choice
+            socket.on("send_choice", (choice_id) => {
+              return;
+            });
+            i++;
           }
         });
     });
@@ -74,21 +95,6 @@ io.on("connection", (socket) => {
       io.in(user.room).emit("waiting_step", {
         room: user.room,
         users_in_room: get_room_users(user.room),
-      });
-    });
-
-    // temp
-    let i = 0;
-    socket.on("new_question", () => {
-      // Retrieve ten questions from api
-      i++;
-      let question = ten_questions[i].question;
-      io.in(room).emit("new_question_show", {
-        number: index_question,
-        difficulty: ten_questions[i].question,
-        category,
-        question,
-        choices,
       });
     });
   });

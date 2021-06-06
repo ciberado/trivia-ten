@@ -59,9 +59,6 @@
             <option value="32">Cartoon & Animations</option>
           </select>
           <button id="startgame_btn" class="wait__start-btn">Start game</button>
-          <button id="newquestion_btn" class="wait__start-btn">
-            Get new question
-          </button>
         </div>
       </ul>
     </div>
@@ -69,7 +66,10 @@
     <div class="question hidden">
       <div class="question__box">
         <div class="question__infobox">
-          <p id="number_text" class="question__info">Q1 - Easy</p>
+          <p class="question__info">
+            <span id="number_text">1</span>/10 -
+            <span id="difficulty_text">easy</span>
+          </p>
           <p id="category_text" class="question__info">Video Games</p>
         </div>
         <p id="question_text" class="question__question">
@@ -77,14 +77,34 @@
         </p>
       </div>
       <div class="question__choices">
-        <button id="choice1_text" class="question__choice incorrect">
+        <button
+          id="0"
+          onClick="submit_choice(this.id)"
+          class="question__choice incorrect"
+        >
           Horse-Riding
         </button>
-        <button id="choice2_text" class="question__choice correct">
+        <button
+          id="1"
+          onClick="submit_choice(this.id)"
+          class="question__choice correct"
+        >
           Cycling
         </button>
-        <button id="choice3_text" class="question__choice">Swimming</button>
-        <button id="choice4_text" class="question__choice">Running</button>
+        <button
+          id="2"
+          onClick="submit_choice(this.id)"
+          class="question__choice"
+        >
+          Swimming
+        </button>
+        <button
+          id="3"
+          onClick="submit_choice(this.id)"
+          class="question__choice"
+        >
+          Running
+        </button>
       </div>
     </div>
 
