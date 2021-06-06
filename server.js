@@ -39,6 +39,9 @@ io.on("connection", (socket) => {
 
     // When leader starts game
     socket.on("start_game", (category_selected) => {
+      // Set all scores to zero
+      set_score_zero(room);
+
       console.log(`⚠ Start game requested from user`);
       let i = 0;
       let ten_questions;
@@ -46,7 +49,6 @@ io.on("connection", (socket) => {
       let correct_response;
       let responses;
       let is_first_to_answer = true;
-      let is_last_round;
       let score_to_add;
 
       // Retrieve ten questions from api
@@ -57,59 +59,70 @@ io.on("connection", (socket) => {
         .then(function (json) {
           ten_questions = json.results;
 
-          // Display questions while it's less than 10
-          while (i < 10) {
-            // Get next question
-            current_question = ten_questions[i];
-            // console.log(`⚠ Current question is: ${current_question.question}`);
-
-            // Get shuffled responses and correct one
-            correct_response = current_question.correct_answer;
-            responses = [
-              current_question.correct_answer,
-              ...current_question.incorrect_answers,
-            ];
-            shuffle(responses);
-
-            // Set all scores to zero
-            set_score_zero(room);
-
-            // Display question
-            io.in(room).emit("show_question", {
-              number: i,
-              difficulty: current_question.difficulty,
-              category: current_question.category,
-              question: current_question.question,
-              choices: responses,
-            });
-
-            // Receive user choice and add his score
-            socket.on("send_choice", (choice_id) => {
-              // Calculate score
-              score_to_add = 0;
-              if (responses[choice_id] == correct_response) {
-                if (current_question.difficulty == "easy") {
-                  score_to_add = 20;
-                } else if (current_question.difficulty == "medium") {
-                  score_to_add = 30;
-                } else {
-                  score_to_add = 40;
-                }
-                if (is_first_to_answer) {
-                  score_to_add += 10;
-                  is_first_to_answer = false;
-                }
-                if (i == 9) {
-                  score_to_add *= 2;
-                }
-
-                // Add score
-                add_score(socket.id, score_to_add);
-              }
-            });
-
-            i++;
+          setInterval(function () {
             is_first_to_answer = true;
+
+            // Display questions while it's less than 10
+            if (i < 10) {
+              // Get next question
+              current_question = ten_questions[i];
+              console.log(
+                `⚠ ${i + 1}th question is: ${current_question.question}`
+              );
+              console.log(
+                `⚠ Answer is: ${current_question.difficulty} ${current_question.correct_answer}`
+              );
+
+              // Get shuffled responses and correct one
+              correct_response = current_question.correct_answer;
+              responses = [
+                current_question.correct_answer,
+                ...current_question.incorrect_answers,
+              ];
+              shuffle(responses);
+
+              // Display question
+              io.in(room).emit("show_question", {
+                number: i + 1,
+                difficulty: current_question.difficulty,
+                category: current_question.category,
+                question: current_question.question,
+                choices: responses,
+              });
+
+              // Next
+              i++;
+            }
+          }, 5000);
+
+          // Receive user choice and add his score
+          socket.on("send_choice", (choice_id) => {
+            // Calculate score
+            score_to_add = 0;
+            if (responses[choice_id] == correct_response) {
+              if (current_question.difficulty == "easy") {
+                score_to_add = 20;
+              } else if (current_question.difficulty == "medium") {
+                score_to_add = 30;
+              } else {
+                score_to_add = 40;
+              }
+              if (is_first_to_answer) {
+                score_to_add += 10;
+                is_first_to_answer = false;
+              }
+              if (i == 9) {
+                score_to_add *= 2;
+              }
+
+              // Add score
+              add_score(socket.id, score_to_add);
+            }
+          });
+
+          // End
+          if (i > 9) {
+            console.log("`⚠ End of the quiz`");
           }
         });
     });
@@ -117,6 +130,7 @@ io.on("connection", (socket) => {
     // Remove user if he leaves
     socket.on("disconnect", () => {
       console.log(`⚠ "${username}" just left room "${room}"`);
+      users = get_room_users;
       const user = user_leave(socket.id);
       io.in(user.room).emit("waiting_step", {
         room: user.room,

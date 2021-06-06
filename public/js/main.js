@@ -54,16 +54,18 @@ socket.on(
     // Enable buttons
     for (let i = 0; i < choice_buttons.length; i++) {
       choice_buttons[i].disabled = false;
+      choice_buttons[i].classList.remove("selected");
     }
 
     // Start timer
+    document.getElementById("timer").innerHTML = "";
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 4,
       easing: "easeInOut",
-      duration: 10000,
-      color: "#FFEA82",
+      duration: 5000,
+      color: "#61afef",
       trailColor: "#eee",
-      trailWidth: 1,
+      trailWidth: 4,
       svgStyle: { width: "100%", height: "100%" },
     });
     bar.animate(1.0);
@@ -83,7 +85,7 @@ socket.on(
 // Show user choice and send it to server
 function submit_choice(choice_id) {
   // Show choice
-  document.getElementById(choice_id).style.backgroundColor = "blue";
+  document.getElementById(choice_id).classList.add("selected");
 
   // Disable buttons
   for (let i = 0; i < choice_buttons.length; i++) {

@@ -3,7 +3,7 @@
 body {
   box-sizing: border-box;
   font-family: Inter;
-  color: #3f3f3f;
+  color: #282c34;
   margin: 0;
   padding: 0;
 }
@@ -30,7 +30,7 @@ a {
   position: sticky;
   top: 0;
   left: 0;
-  background-color: #3f3f3f;
+  background-color: #282c34;
   color: white;
 
   .topbar__logo {
@@ -51,6 +51,7 @@ a {
 }
 
 .timer {
+  margin-top: -0.5rem;
   height: 0.5rem;
   width: 100%;
 }
@@ -84,9 +85,9 @@ a {
       font-size: 1rem;
       font-weight: 600;
       color: #e8e8e8;
-      background-color: #3f3f3f;
+      background-color: #282c34;
       border-radius: 0.3rem;
-      width: 83%;
+      width: 85%;
       display: block;
       margin: auto;
       padding: 1rem;
@@ -95,23 +96,18 @@ a {
 }
 
 .wait {
-  display: grid;
-  place-items: center;
-  width: 100vw;
-  height: 85vh;
-  text-align: center;
   .wait__message {
+    font-weight: 500;
+    width: 80%;
+    margin: auto;
+    margin-top: 5rem;
+    margin-bottom: 5rem;
     li {
       padding-bottom: 0.5rem;
     }
-    .wait__text {
-      width: 80%;
-      margin: auto;
-      text-align: left;
-      font-weight: 600;
-      font-size: 1.8rem;
-    }
-    .wait__select-category {
+  }
+  .wait__menu {
+    .wait__select {
       background-color: white;
       color: #808080;
       font-family: Inter;
@@ -130,12 +126,12 @@ a {
       font-size: 1rem;
       font-weight: 600;
       color: #e8e8e8;
-      background-color: #3f3f3f;
+      background-color: #282c34;
       border-radius: 0.3rem;
       width: 83%;
+      display: block;
       margin: auto;
       padding: 1rem;
-      margin-top: 2rem;
     }
   }
 }
@@ -150,7 +146,7 @@ a {
     height: 16rem;
     margin: auto;
     background-color: #e8e8e8;
-    color: #3f3f3f;
+    color: #282c34;
     text-align: center;
     font-weight: 700;
     font-size: 1.6rem;
@@ -191,7 +187,7 @@ a {
       border-radius: 0.5rem;
       font-family: Inter;
       background-color: #e8e8e8;
-      color: #3f3f3f;
+      color: #282c34;
       font-weight: 600;
       font-size: 1.1rem;
       text-align: center;
@@ -205,6 +201,9 @@ a {
     .correct {
       background-color: #6cb478;
       color: #ffffff;
+    }
+    .selected {
+      box-shadow: 0px 0px 0px 2.5px rgba(40, 44, 52, 1);
     }
   }
 }
@@ -224,7 +223,7 @@ a {
       width: 80%;
       margin: auto;
       background-color: #e8e8e8;
-      color: #3f3f3f;
+      color: #282c34;
       text-align: center;
       font-weight: 700;
       font-size: 1.6rem;

@@ -22,43 +22,41 @@
         <li id="wait_text" class="wait__text">
           Waiting for the leader to start the game...
         </li>
+        <li class="wait__text">Room id is #<span id="roomid_text"></span></li>
         <li class="wait__text">
-          Room id is #<span id="roomid_text">D4334</span>
+          Players already in: <span id="players_text"></span>
         </li>
-        <li class="wait__text">
-          Players already in are: <span id="players_text"> Arhun, Jeusto</span>
-        </li>
-        <div id="leader_div" class="wait__leader-div hidden">
-          <select id="category_select" class="wait__select-category">
-            <option value="0">Any category</option>
-            <option value="9">General knowledge</option>
-            <option value="10">Books</option>
-            <option value="11">Film</option>
-            <option value="12">Music</option>
-            <option value="13">Musicals & Theatres</option>
-            <option value="14">Television</option>
-            <option value="15">Video games</option>
-            <option value="16">Board games</option>
-            <option value="17">Nature</option>
-            <option value="18">Computers</option>
-            <option value="19">Mathematics</option>
-            <option value="20">Mythology</option>
-            <option value="21">Sports</option>
-            <option value="22">Geography</option>
-            <option value="23">History</option>
-            <option value="24">Politics</option>
-            <option value="25">Art</option>
-            <option value="26">Celebrities</option>
-            <option value="27">Animals</option>
-            <option value="28">Vehicules</option>
-            <option value="29">Comics</option>
-            <option value="30">Gadgets</option>
-            <option value="31">Anime & Manga</option>
-            <option value="32">Cartoon & Animations</option>
-          </select>
-          <button id="startgame_btn" class="wait__start-btn">Start game</button>
-        </div>
       </ul>
+      <div id="leader_div" class="wait__menu hidden">
+        <select id="category_select" class="wait__select">
+          <option value="0">Any category</option>
+          <option value="9">General knowledge</option>
+          <option value="10">Books</option>
+          <option value="11">Film</option>
+          <option value="12">Music</option>
+          <option value="13">Musicals & Theatres</option>
+          <option value="14">Television</option>
+          <option value="15">Video games</option>
+          <option value="16">Board games</option>
+          <option value="17">Nature</option>
+          <option value="18">Computers</option>
+          <option value="19">Mathematics</option>
+          <option value="20">Mythology</option>
+          <option value="21">Sports</option>
+          <option value="22">Geography</option>
+          <option value="23">History</option>
+          <option value="24">Politics</option>
+          <option value="25">Art</option>
+          <option value="26">Celebrities</option>
+          <option value="27">Animals</option>
+          <option value="28">Vehicules</option>
+          <option value="29">Comics</option>
+          <option value="30">Gadgets</option>
+          <option value="31">Anime & Manga</option>
+          <option value="32">Cartoon & Animations</option>
+        </select>
+        <button id="startgame_btn" class="wait__start-btn">Start game</button>
+      </div>
     </div>
 
     <div class="question hidden">
@@ -78,14 +76,14 @@
         <button
           id="0"
           onClick="submit_choice(this.id)"
-          class="question__choice incorrect"
+          class="question__choice"
         >
           Horse-Riding
         </button>
         <button
           id="1"
           onClick="submit_choice(this.id)"
-          class="question__choice correct"
+          class="question__choice"
         >
           Cycling
         </button>

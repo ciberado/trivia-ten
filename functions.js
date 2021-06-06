@@ -4,7 +4,6 @@ const users = [];
 function user_join(id, username, room) {
   const user = { id, username, room, score: 0 };
   users.push(user);
-  console.log(users);
   return user;
 }
 
