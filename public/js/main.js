@@ -38,6 +38,7 @@ startgame_btn.addEventListener("click", function () {
 });
 
 // Display question
+const timer = document.getElementById("timer");
 const number_text = document.getElementById("number_text");
 const difficulty_text = document.getElementById("difficulty_text");
 const category_text = document.getElementById("category_text");
@@ -54,6 +55,18 @@ socket.on(
     for (let i = 0; i < choice_buttons.length; i++) {
       choice_buttons[i].disabled = false;
     }
+
+    // Start timer
+    var bar = new ProgressBar.Line(timer, {
+      strokeWidth: 4,
+      easing: "easeInOut",
+      duration: 10000,
+      color: "#FFEA82",
+      trailColor: "#eee",
+      trailWidth: 1,
+      svgStyle: { width: "100%", height: "100%" },
+    });
+    bar.animate(1.0);
 
     // Show text
     number_text.innerHTML = number;

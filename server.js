@@ -14,6 +14,7 @@ const {
   get_room_users,
   set_score_zero,
   shuffle,
+  add_score,
 } = require("./functions");
 
 // Set static folder
@@ -44,6 +45,9 @@ io.on("connection", (socket) => {
       let current_question;
       let correct_response;
       let responses;
+      let is_first_to_answer = true;
+      let is_last_round;
+      let score_to_add;
 
       // Retrieve ten questions from api
       let api_url = `https://opentdb.com/api.php?amount=10&type=multiple&category=${category_selected}`;
@@ -57,7 +61,7 @@ io.on("connection", (socket) => {
           while (i < 10) {
             // Get next question
             current_question = ten_questions[i];
-            console.log(`⚠ Current question is: ${current_question.question}`);
+            // console.log(`⚠ Current question is: ${current_question.question}`);
 
             // Get shuffled responses and correct one
             correct_response = current_question.correct_answer;
@@ -79,11 +83,33 @@ io.on("connection", (socket) => {
               choices: responses,
             });
 
-            // Receive user choice
+            // Receive user choice and add his score
             socket.on("send_choice", (choice_id) => {
-              return;
+              // Calculate score
+              score_to_add = 0;
+              if (responses[choice_id] == correct_response) {
+                if (current_question.difficulty == "easy") {
+                  score_to_add = 20;
+                } else if (current_question.difficulty == "medium") {
+                  score_to_add = 30;
+                } else {
+                  score_to_add = 40;
+                }
+                if (is_first_to_answer) {
+                  score_to_add += 10;
+                  is_first_to_answer = false;
+                }
+                if (i == 9) {
+                  score_to_add *= 2;
+                }
+
+                // Add score
+                add_score(socket.id, score_to_add);
+              }
             });
+
             i++;
+            is_first_to_answer = true;
           }
         });
     });

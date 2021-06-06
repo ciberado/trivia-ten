@@ -2,8 +2,9 @@ const users = [];
 
 // Add user to user's list
 function user_join(id, username, room) {
-  const user = { id, username, room, score: 5 };
+  const user = { id, username, room, score: 0 };
   users.push(user);
+  console.log(users);
   return user;
 }
 
@@ -45,10 +46,19 @@ function shuffle(array) {
   }
 }
 
+// Add score to user
+function add_score(userid, score) {
+  let index;
+  index = users.findIndex((element) => element.id == userid);
+  users[index].score += score;
+  console.log(users);
+}
+
 module.exports = {
   user_join,
   user_leave,
   get_room_users,
   set_score_zero,
   shuffle,
+  add_score,
 };
