@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style/css/style.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="topbar">
+      <a class="topbar__logo" href="index.html">
+        <p class="topbar__logotop">TRIVIA</p>
+        <p class="topbar__logobottom">TEN</p>
+      </a>
+    </div>
+
+    <div class="timer hidden">
+      <div class="timer__inside"></div>
+    </div>
+
+    <div class="wait">
+      <ul class="wait__message">
+        <li id="wait_text" class="wait__text">
+          Waiting for the leader to start the game...
+        </li>
+        <li class="wait__text">
+          Room id is #<span id="roomid_text">D4334</span>
+        </li>
+        <li class="wait__text">
+          Players already in are: <span id="players_text"> Arhun, Jeusto</span>
+        </li>
+        <div id="leader_div" class="wait__leader-div hidden">
+          <select id="category_select" class="wait__select-category">
+            <option value="0">Any category</option>
+            <option value="9">General knowledge</option>
+            <option value="10">Books</option>
+            <option value="11">Film</option>
+            <option value="12">Music</option>
+            <option value="13">Musicals & Theatres</option>
+            <option value="14">Television</option>
+            <option value="15">Video games</option>
+            <option value="16">Board games</option>
+            <option value="17">Nature</option>
+            <option value="18">Computers</option>
+            <option value="19">Mathematics</option>
+            <option value="20">Mythology</option>
+            <option value="21">Sports</option>
+            <option value="22">Geography</option>
+            <option value="23">History</option>
+            <option value="24">Politics</option>
+            <option value="25">Art</option>
+            <option value="26">Celebrities</option>
+            <option value="27">Animals</option>
+            <option value="28">Vehicules</option>
+            <option value="29">Comics</option>
+            <option value="30">Gadgets</option>
+            <option value="31">Anime & Manga</option>
+            <option value="32">Cartoon & Animations</option>
+          </select>
+          <button id="startgame_btn" class="wait__start-btn">Start game</button>
+          <button id="newquestion_btn" class="wait__start-btn">
+            Get new question
+          </button>
+        </div>
+      </ul>
+    </div>
+
+    <div class="question hidden">
+      <div class="question__box">
+        <div class="question__infobox">
+          <p id="number_text" class="question__info">Q1 - Easy</p>
+          <p id="category_text" class="question__info">Video Games</p>
+        </div>
+        <p id="question_text" class="question__question">
+          Which of the following sports is not part of the triathlon?
+        </p>
+      </div>
+      <div class="question__choices">
+        <button id="choice1_text" class="question__choice incorrect">
+          Horse-Riding
+        </button>
+        <button id="choice2_text" class="question__choice correct">
+          Cycling
+        </button>
+        <button id="choice3_text" class="question__choice">Swimming</button>
+        <button id="choice4_text" class="question__choice">Running</button>
+      </div>
+    </div>
+
+    <div class="end hidden">
+      <p class="end__result">Jeusto won!</p>
+      <div class="end__scoreboard">
+        <div class="end__player">
+          <p class="end__name">Jeusto</p>
+          <p class="end__score">65</p>
+        </div>
+        <div class="end__player">
+          <p class="end__name">Arhun</p>
+          <p class="end__score">43</p>
+        </div>
+      </div>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"
+      integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="
+      crossorigin="anonymous"
+    ></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

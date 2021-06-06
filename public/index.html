@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style/css/style.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="topbar">
+      <a class="topbar__logo" href="index.html">
+        <p class="topbar__logotop">TRIVIA</p>
+        <p class="topbar__logobottom">TEN</p>
+      </a>
+    </div>
+
+    <div class="home">
+      <ul class="home__rules">
+        <li>10 questions. 10 seconds for each question.</li>
+        <li>
+          Hard question = 40 points
+          <br />
+          Medium question = 30 points
+          <br />
+          Easy question = 20 points
+        </li>
+        <li>10 bonus points for answering first.</li>
+        <li>
+          Last question gives double the points but the difficulty is hidden.
+        </li>
+      </ul>
+      <form action="trivia.html" class="home__menu">
+        <input
+          required
+          id="username"
+          name="username"
+          class="home__username-input"
+          type="text"
+          placeholder="Choose username"
+        />
+        <input
+          required
+          name="room"
+          id="room"
+          class="home__room-input"
+          type="text"
+          placeholder="Enter room id"
+        />
+        <button class="home__join-btn">Join room</button>
+      </form>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+  </body>
+</html>
