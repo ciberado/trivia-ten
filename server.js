@@ -59,41 +59,34 @@ io.on("connection", (socket) => {
         .then(function (json) {
           ten_questions = json.results;
 
-          setInterval(function () {
+          // Display first question
+          current_question = ten_questions[i];
+          console.log(
+            `⚠ Answer of ${i + 1}${i + 1}${i + 1} is "${
+              current_question.correct_answer
+            }" (${current_question.difficulty})`
+          );
+          get_question(current_question, correct_response, responses);
+          i++;
+
+          // Display all other questions
+          var intr = setInterval(function () {
+            // Get next question
             is_first_to_answer = true;
+            current_question = ten_questions[i];
+            console.log(
+              `⚠ Answer of ${i + 1}${i + 1}${i + 1} is "${
+                current_question.correct_answer
+              }" (${current_question.difficulty})`
+            );
+            get_question(current_question, correct_response, responses);
 
-            // Display questions while it's less than 10
-            if (i < 10) {
-              // Get next question
-              current_question = ten_questions[i];
-              console.log(
-                `⚠ ${i + 1}th question is: ${current_question.question}`
-              );
-              console.log(
-                `⚠ Answer is: ${current_question.difficulty} ${current_question.correct_answer}`
-              );
-
-              // Get shuffled responses and correct one
-              correct_response = current_question.correct_answer;
-              responses = [
-                current_question.correct_answer,
-                ...current_question.incorrect_answers,
-              ];
-              shuffle(responses);
-
-              // Display question
-              io.in(room).emit("show_question", {
-                number: i + 1,
-                difficulty: current_question.difficulty,
-                category: current_question.category,
-                question: current_question.question,
-                choices: responses,
-              });
-
-              // Next
-              i++;
+            // End
+            if (++i == 10) {
+              clearInterval(intr);
+              console.log(`⚠ End of the quiz`);
             }
-          }, 5000);
+          }, 10000);
 
           // Receive user choice and add his score
           socket.on("send_choice", (choice_id) => {
@@ -111,7 +104,7 @@ io.on("connection", (socket) => {
                 score_to_add += 10;
                 is_first_to_answer = false;
               }
-              if (i == 9) {
+              if (i == 10) {
                 score_to_add *= 2;
               }
 
@@ -120,9 +113,23 @@ io.on("connection", (socket) => {
             }
           });
 
-          // End
-          if (i > 9) {
-            console.log("`⚠ End of the quiz`");
+          function get_question() {
+            // Get shuffled responses and correct one
+            correct_response = current_question.correct_answer;
+            responses = [
+              current_question.correct_answer,
+              ...current_question.incorrect_answers,
+            ];
+            shuffle(responses);
+
+            // Display question
+            io.in(room).emit("show_question", {
+              number: i + 1,
+              difficulty: current_question.difficulty,
+              category: current_question.category,
+              question: current_question.question,
+              choices: responses,
+            });
           }
         });
     });

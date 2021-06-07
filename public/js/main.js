@@ -61,8 +61,8 @@ socket.on(
     document.getElementById("timer").innerHTML = "";
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 4,
-      easing: "easeInOut",
-      duration: 5000,
+      easing: "linear",
+      duration: 10000,
       color: "#61afef",
       trailColor: "#eee",
       trailWidth: 4,

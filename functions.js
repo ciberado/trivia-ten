@@ -50,7 +50,7 @@ function add_score(userid, score) {
   let index;
   index = users.findIndex((element) => element.id == userid);
   users[index].score += score;
-  console.log(users);
+  console.log(`Adding ${score}, it's now ${users[index].score}`);
 }
 
 module.exports = {
