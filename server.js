@@ -134,6 +134,14 @@ async function start_game() {
     // Wait 10 seconds
     await sleep(5000);
 
+    // Display results
+    io.in(user.room).emit("results", {
+      correct_answer: current_question.correct_answer,
+    });
+
+    // Wait 2 seconds
+    await sleep(2000);
+
     // Display leaderboard or end
     io.in(user.room).emit("leaderboard", {
       room: user.room,
@@ -141,8 +149,8 @@ async function start_game() {
       scores_in_room: get_room_scores(user.room),
     });
 
-    // Wait 5 seconds
-    await sleep(5000);
+    // Wait 2 seconds
+    await sleep(2000);
 
     // Go next
     i++;

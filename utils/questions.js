@@ -11,12 +11,16 @@ function get_next_question(ten_questions, index) {
     [all_answers[i], all_answers[j]] = [all_answers[j], all_answers[i]];
   }
 
+  correct_answer = all_answers.findIndex(
+    (element) => element == ten_questions[index].correct_answer
+  );
+
   // Return question object
   obj = {
     question: ten_questions[index].question,
     category: ten_questions[index].category,
     difficulty: ten_questions[index].difficulty,
-    correct_answer: ten_questions[index].correct_answer,
+    correct_answer: correct_answer,
     all_answers: all_answers,
   };
   return obj;

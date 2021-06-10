@@ -59,6 +59,8 @@ socket.on(
     for (let i = 0; i < choice_buttons.length; i++) {
       choice_buttons[i].disabled = false;
       choice_buttons[i].classList.remove("selected");
+      choice_buttons[i].classList.remove("incorrect");
+      choice_buttons[i].classList.remove("correct");
     }
 
     // Start timer
@@ -89,6 +91,18 @@ socket.on(
     choice3_text.innerHTML = all_answers[3];
   }
 );
+
+// Show results
+socket.on("results", ({ correct_answer }) => {
+  let choice = document.querySelector(".selected");
+  let answers = document.getElementsByClassName("question__choice");
+  if (choice.id == correct_answer) {
+    choice.classList.add("correct");
+  } else {
+    choice.classList.add("incorrect");
+    answers[correct_answer].classList.add("correct");
+  }
+});
 
 // Show leaderboard after each question
 socket.on("leaderboard", ({ room, users_in_room, scores_in_room }) => {
