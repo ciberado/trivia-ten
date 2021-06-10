@@ -121,20 +121,21 @@ socket.on("results", ({ correct_answer }) => {
 });
 
 // Show leaderboard after each question
-socket.on("leaderboard", ({ number, users_in_room, scores_in_room }) => {
+socket.on("leaderboard", ({ number, scores_in_room }) => {
   let message = `Question ${number}`;
   if (number == 10) {
     message = `Last question! Double points`;
   }
+  console.log(scores_in_room);
   scoreboard_div.innerHTML = "";
   document.querySelector(".end__result").innerHTML = message;
-  for (i = 0; i < users_in_room.length; i++) {
+  for (i = 0; i < scores_in_room.length; i++) {
     const Template = `
     <div class="end__player ${
       i == 0 ? "first" : i == 2 ? "second" : i == 3 ? "third" : ""
     } ">
-      <p class="end__name">${users_in_room[i]}</p>
-      <p class="end__score">${scores_in_room[i]}</p>
+      <p class="end__name">${scores_in_room[i].name}</p>
+      <p class="end__score">${scores_in_room[i].score}</p>
     </div>`;
     scoreboard_div.insertAdjacentHTML("beforeend", Template);
   }

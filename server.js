@@ -84,9 +84,7 @@ io.on("connection", (socket) => {
 
     // Calculate score
     score_to_add = 0;
-    if (
-      current_question.all_answers[choice_id] == current_question.correct_answer
-    ) {
+    if (choice_id == current_question.correct_answer) {
       if (current_question.difficulty == "easy") {
         score_to_add = 20;
       } else if (current_question.difficulty == "medium") {
@@ -112,6 +110,8 @@ io.on("connection", (socket) => {
 async function start_game() {
   i = 0;
   while (i < 10) {
+    is_first_to_answer = true;
+
     // Get question
     current_question = get_next_question(ten_questions, i);
     console.log(current_question);
@@ -144,7 +144,6 @@ async function start_game() {
     // Display leaderboard or end
     io.in(user.room).emit("leaderboard", {
       number: i + 2,
-      users_in_room: get_room_users(user.room),
       scores_in_room: get_room_scores(user.room),
     });
 

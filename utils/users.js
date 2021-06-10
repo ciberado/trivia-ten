@@ -39,13 +39,25 @@ function get_room_users(room) {
 
 // Get scores in a room
 function get_room_scores(room) {
-  return users
+  let temp = users
     .filter((user) => {
       return user.room == room;
     })
     .map((user) => {
-      return user.score;
+      return { name: user.username, score: user.score };
     });
+  return temp.sort(compare);
+}
+
+// Function to sort room scores
+function compare(a, b) {
+  let comparison = 0;
+  if (a.score < b.score) {
+    comparison = 1;
+  } else if (a.score > b.score) {
+    comparison = -1;
+  }
+  return comparison;
 }
 
 // Add score to user
