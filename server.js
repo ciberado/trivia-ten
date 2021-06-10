@@ -22,7 +22,6 @@ const {
   set_score_zero,
   add_score,
 } = require("./utils/users");
-const { get_next_question } = require("./utils/questions");
 
 const { response } = require("express");
 
@@ -132,7 +131,7 @@ async function start_game() {
     });
 
     // Wait 10 seconds
-    await sleep(5000);
+    await sleep(10000);
 
     // Display results
     io.in(user.room).emit("results", {
@@ -144,13 +143,13 @@ async function start_game() {
 
     // Display leaderboard or end
     io.in(user.room).emit("leaderboard", {
-      room: user.room,
+      number: i + 2,
       users_in_room: get_room_users(user.room),
       scores_in_room: get_room_scores(user.room),
     });
 
     // Wait 2 seconds
-    await sleep(2000);
+    await sleep(2500);
 
     // Go next
     i++;
@@ -161,6 +160,34 @@ async function start_game() {
 // Delay function
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Get next question
+function get_next_question(ten_questions, index) {
+  // Shuffle answers
+  let all_answers = [];
+  all_answers[0] = ten_questions[index].correct_answer;
+  all_answers[1] = ten_questions[index].incorrect_answers[0];
+  all_answers[2] = ten_questions[index].incorrect_answers[1];
+  all_answers[3] = ten_questions[index].incorrect_answers[2];
+  for (let i = all_answers.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [all_answers[i], all_answers[j]] = [all_answers[j], all_answers[i]];
+  }
+
+  correct_answer = all_answers.findIndex(
+    (element) => element == ten_questions[index].correct_answer
+  );
+
+  // Return question object
+  obj = {
+    question: ten_questions[index].question,
+    category: ten_questions[index].category,
+    difficulty: ten_questions[index].difficulty,
+    correct_answer: correct_answer,
+    all_answers: all_answers,
+  };
+  return obj;
 }
 
 // Start server on port

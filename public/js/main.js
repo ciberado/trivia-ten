@@ -68,7 +68,7 @@ socket.on(
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 4,
       easing: "linear",
-      duration: 5000,
+      duration: 10000,
       color: "#61afef",
       trailColor: "#eee",
       trailWidth: 4,
@@ -83,6 +83,9 @@ socket.on(
 
     number_text.innerHTML = number;
     difficulty_text.innerHTML = difficulty;
+    if (number == 10) {
+      difficulty_text.innerHTML = "hidden";
+    }
     category_text.innerHTML = category;
     question_text.innerHTML = question;
     choice0_text.innerHTML = all_answers[0];
@@ -93,21 +96,38 @@ socket.on(
 );
 
 // Show results
+let correct_sound = new this.Howl({
+  src: [`../sounds/correct.ogg`],
+  volume: 0.25,
+});
+let wrong_sound = new this.Howl({
+  src: [`../sounds/wrong.ogg`],
+  volume: 0.25,
+});
 socket.on("results", ({ correct_answer }) => {
   let choice = document.querySelector(".selected");
   let answers = document.getElementsByClassName("question__choice");
-  if (choice.id == correct_answer) {
+  if (choice != null && choice.id == correct_answer) {
     choice.classList.add("correct");
-  } else {
+    correct_sound.play();
+  } else if (choice != null) {
     choice.classList.add("incorrect");
     answers[correct_answer].classList.add("correct");
+    wrong_sound.play();
+  } else {
+    answers[correct_answer].classList.add("correct");
+    wrong_sound.play();
   }
 });
 
 // Show leaderboard after each question
-socket.on("leaderboard", ({ room, users_in_room, scores_in_room }) => {
+socket.on("leaderboard", ({ number, users_in_room, scores_in_room }) => {
+  let message = `Question ${number}`;
+  if (number == 10) {
+    message = `Last question! Double points`;
+  }
   scoreboard_div.innerHTML = "";
-
+  document.querySelector(".end__result").innerHTML = message;
   for (i = 0; i < users_in_room.length; i++) {
     const Template = `
     <div class="end__player ${
