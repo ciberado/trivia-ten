@@ -37,18 +37,30 @@ function get_room_users(room) {
     });
 }
 
+// Get scores in a room
+function get_room_scores(room) {
+  return users
+    .filter((user) => {
+      return user.room == room;
+    })
+    .map((user) => {
+      return user.score;
+    });
+}
+
 // Add score to user
 function add_score(userid, score) {
   let index;
   index = users.findIndex((element) => element.id == userid);
   users[index].score += score;
+  console.log(`adding ${score}`);
 }
 
 module.exports = {
   user_join,
   user_leave,
   get_room_users,
+  get_room_scores,
   set_score_zero,
-  shuffle,
   add_score,
 };

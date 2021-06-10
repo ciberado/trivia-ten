@@ -25,13 +25,11 @@ socket.on("waiting_step", ({ room, users_in_room }) => {
 // Start game when leader clicks on start button
 const wait_div = document.querySelector(".wait");
 const question_div = document.querySelector(".question");
+const end_div = document.querySelector(".end");
+const scoreboard_div = document.querySelector(".end__scoreboard");
 const category_select = document.getElementById("category_select");
 const startgame_btn = document.getElementById("startgame_btn");
 startgame_btn.addEventListener("click", function () {
-  // Display question div
-  wait_div.classList.add("hidden");
-  question_div.classList.remove("hidden");
-
   // Emit socket to start game
   let category_selected = category_select.value;
   socket.emit("start_game", category_selected);
@@ -50,7 +48,13 @@ const choice2_text = document.getElementById("2");
 const choice3_text = document.getElementById("3");
 socket.on(
   "show_question",
-  ({ number, difficulty, category, question, choices }) => {
+  ({ number, difficulty, category, question, all_answers }) => {
+    // Enable slide in animation
+    end_div.classList.remove("slide-in-right");
+    end_div.classList.add("slide-out-left");
+    question_div.classList.remove("slide-out-left");
+    question_div.classList.add("slide-in-right");
+
     // Enable buttons
     for (let i = 0; i < choice_buttons.length; i++) {
       choice_buttons[i].disabled = false;
@@ -62,7 +66,7 @@ socket.on(
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 4,
       easing: "linear",
-      duration: 10000,
+      duration: 5000,
       color: "#61afef",
       trailColor: "#eee",
       trailWidth: 4,
@@ -71,16 +75,44 @@ socket.on(
     bar.animate(1.0);
 
     // Show text
+    wait_div.classList.add("hidden");
+    end_div.classList.add("hidden");
+    question_div.classList.remove("hidden");
+
     number_text.innerHTML = number;
     difficulty_text.innerHTML = difficulty;
     category_text.innerHTML = category;
     question_text.innerHTML = question;
-    choice0_text.innerHTML = choices[0];
-    choice1_text.innerHTML = choices[1];
-    choice2_text.innerHTML = choices[2];
-    choice3_text.innerHTML = choices[3];
+    choice0_text.innerHTML = all_answers[0];
+    choice1_text.innerHTML = all_answers[1];
+    choice2_text.innerHTML = all_answers[2];
+    choice3_text.innerHTML = all_answers[3];
   }
 );
+
+// Show leaderboard after each question
+socket.on("leaderboard", ({ room, users_in_room, scores_in_room }) => {
+  scoreboard_div.innerHTML = "";
+
+  for (i = 0; i < users_in_room.length; i++) {
+    const Template = `
+    <div class="end__player ${
+      i == 0 ? "first" : i == 2 ? "second" : i == 3 ? "third" : ""
+    } ">
+      <p class="end__name">${users_in_room[i]}</p>
+      <p class="end__score">${scores_in_room[i]}</p>
+    </div>`;
+    scoreboard_div.insertAdjacentHTML("beforeend", Template);
+  }
+
+  question_div.classList.remove("slide-in-right");
+  question_div.classList.add("slide-out-left");
+  end_div.classList.remove("slide-out-left");
+  end_div.classList.add("slide-in-right");
+
+  end_div.classList.remove("hidden");
+  question_div.classList.add("hidden");
+});
 
 // Show user choice and send it to server
 function submit_choice(choice_id) {

@@ -1,5 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
+@import "animations";
+
 body {
   box-sizing: border-box;
   font-family: Inter;
@@ -70,6 +72,7 @@ a {
   .home__menu {
     .home__username-input,
     .home__room-input {
+      appearance: none;
       font-family: Inter;
       font-size: 1rem;
       border: 2px solid #ced4da;
@@ -210,7 +213,7 @@ a {
 
 .end {
   .end__result {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 600;
     text-align: center;
   }
@@ -220,26 +223,23 @@ a {
       display: flex;
       justify-content: space-around;
       align-items: center;
-      width: 80%;
+      width: 60%;
       margin: auto;
       background-color: #e8e8e8;
       color: #282c34;
       text-align: center;
       font-weight: 700;
-      font-size: 1.6rem;
-      border-radius: 1rem;
+      font-size: 1.2rem;
+      border-radius: 0.7rem;
       padding: 1rem 0rem;
       margin-bottom: 1rem;
-      &:first-child {
-        background-color: #ffd700;
-      }
       .end__name {
         margin: 0;
         display: block;
       }
       .end__score {
         margin: 0;
-        font-size: 2rem;
+        font-size: 1.2rem;
       }
     }
   }
@@ -247,4 +247,13 @@ a {
 
 .hidden {
   display: none;
+}
+.first {
+  background-color: #ffd700;
+}
+.second {
+  background-color: #d3d3d3;
+}
+.third {
+  background-color: #cd7f32;
 }

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style/css/style.css" />
-    <title>Document</title>
+    <title>Trivia Ten</title>
   </head>
   <body>
     <div class="topbar">
@@ -59,51 +59,69 @@
       </div>
     </div>
 
-    <div class="question hidden">
-      <div class="question__box">
-        <div class="question__infobox">
-          <p class="question__info">
-            <span id="number_text"></span>/10 -
-            <span id="difficulty_text"></span>
-          </p>
-          <p id="category_text" class="question__info"></p>
+    <div id="game slide-in-right">
+      <div class="question hidden">
+        <div class="question__box">
+          <div class="question__infobox">
+            <p class="question__info">
+              <span id="number_text"></span>/10 -
+              <span id="difficulty_text"></span>
+            </p>
+            <p id="category_text" class="question__info"></p>
+          </div>
+          <p id="question_text" class="question__question"></p>
         </div>
-        <p id="question_text" class="question__question"></p>
+        <div class="question__choices">
+          <button
+            id="0"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="1"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="2"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="3"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+        </div>
       </div>
-      <div class="question__choices">
-        <button
-          id="0"
-          onClick="submit_choice(this.id)"
-          class="question__choice"
-        ></button>
-        <button
-          id="1"
-          onClick="submit_choice(this.id)"
-          class="question__choice"
-        ></button>
-        <button
-          id="2"
-          onClick="submit_choice(this.id)"
-          class="question__choice"
-        ></button>
-        <button
-          id="3"
-          onClick="submit_choice(this.id)"
-          class="question__choice"
-        ></button>
-      </div>
-    </div>
 
-    <div class="end hidden">
-      <p class="end__result">Jeusto won!</p>
-      <div class="end__scoreboard">
-        <div class="end__player">
-          <p class="end__name">Jeusto</p>
-          <p class="end__score">65</p>
-        </div>
-        <div class="end__player">
-          <p class="end__name">Arhun</p>
-          <p class="end__score">43</p>
+      <div class="end hidden">
+        <p class="end__result">Question 5</p>
+        <div class="end__scoreboard">
+          <div id="first" class="end__player hidden">
+            <p class="end__name">Jeusto</p>
+            <p class="end__score">65</p>
+          </div>
+          <div id="second" class="end__player hidden">
+            <p class="end__name">Arhun</p>
+            <p class="end__score">43</p>
+          </div>
+          <div id="third" class="end__player hidden">
+            <p class="end__name">Test</p>
+            <p class="end__score">23</p>
+          </div>
+          <div class="end__player hidden">
+            <p class="end__name">Test</p>
+            <p class="end__score">23</p>
+          </div>
+          <div class="end__player hidden">
+            <p class="end__name">Test</p>
+            <p class="end__score">23</p>
+          </div>
+          <div class="end__player hidden">
+            <p class="end__name">Test</p>
+            <p class="end__score">23</p>
+          </div>
         </div>
       </div>
     </div>
