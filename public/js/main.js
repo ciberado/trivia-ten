@@ -144,7 +144,7 @@ socket.on("leaderboard", ({ number, scores_in_room }) => {
   for (i = 0; i < scores_in_room.length; i++) {
     const Template = `
     <tr>
-      <td>${i}</td>
+      <td>${i + 1}</td>
       <td>${scores_in_room[i].name}</td>
       <td>${scores_in_room[i].score}</td>
     </tr>
