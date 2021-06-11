@@ -22,32 +22,36 @@ a {
 }
 
 .topbar {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
   margin: 0;
   width: 100%;
   height: 5rem;
-  position: sticky;
-  top: 0;
-  left: 0;
   background-color: #282c34;
   color: white;
-
   .topbar__logo {
     margin: auto;
     text-align: center;
     font-weight: 700;
     color: white;
-    .topbar__logotop {
-      font-size: 1.2rem;
-      margin: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .topbar__logoicon {
+      width: 3rem;
     }
-    .topbar__logobottom {
-      font-size: 2rem;
+    .topbar__logotext {
       margin: 0;
-      margin-top: -0.6rem;
+      padding: 0;
+      padding-left: 0.5rem;
+      font-size: 2rem;
+      background: -webkit-linear-gradient(0deg, #61afef 0%, #93cefd 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
   }
 }
@@ -59,12 +63,18 @@ a {
 }
 
 .home {
+  max-width: 50rem;
+  margin: auto;
   .home__rules {
     font-weight: 500;
+    font-size: 1.2rem;
+    padding: 0;
+    list-style-type: none;
     width: 80%;
     margin: auto;
-    margin-top: 5rem;
-    margin-bottom: 5rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    width: 80%;
     li {
       padding-bottom: 0.5rem;
     }
@@ -72,6 +82,7 @@ a {
   .home__menu {
     .home__username-input,
     .home__room-input {
+      box-sizing: border-box;
       appearance: none;
       font-family: Inter;
       font-size: 1rem;
@@ -84,27 +95,41 @@ a {
       padding: 0.5rem;
     }
     .home__join-btn {
+      appearance: none;
       font-family: Inter;
       font-size: 1rem;
       font-weight: 600;
       color: #e8e8e8;
       background-color: #282c34;
       border-radius: 0.3rem;
-      width: 85%;
+      width: 80%;
       display: block;
       margin: auto;
       padding: 1rem;
+      transition: ease-in-out 100ms;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      &:hover {
+        background-color: #1a1d24;
+        transform: scale(1.05);
+      }
     }
   }
 }
 
 .wait {
+  max-width: 50rem;
+  margin: auto;
   .wait__message {
     font-weight: 500;
     width: 80%;
     margin: auto;
-    margin-top: 5rem;
-    margin-bottom: 5rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    font-size: 1.2rem;
+    padding: 0;
+    list-style-type: none;
+    width: 80%;
     li {
       padding-bottom: 0.5rem;
     }
@@ -135,11 +160,18 @@ a {
       display: block;
       margin: auto;
       padding: 1rem;
+      transition: ease-in-out 100ms;
+      &:hover {
+        background-color: #1a1d24;
+        transform: scale(1.05);
+      }
     }
   }
 }
 
 .question {
+  max-width: 50rem;
+  margin: auto;
   margin-top: 5rem;
   .question__box {
     position: relative;
@@ -154,6 +186,7 @@ a {
     font-weight: 700;
     font-size: 1.6rem;
     border-radius: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     .question__infobox {
       display: grid;
       place-items: center;
@@ -180,6 +213,7 @@ a {
     }
   }
   .question__choices {
+    max-width: 50rem;
     width: 90%;
     margin: auto;
     margin-top: 4rem;
@@ -196,6 +230,12 @@ a {
       text-align: center;
       padding: 1rem;
       margin-bottom: 1rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      transition: ease-in-out 100ms;
+      &:hover {
+        transform: scale(1.05);
+      }
     }
     .incorrect {
       background-color: #e24b4b;
@@ -212,11 +252,62 @@ a {
 }
 
 .end {
+  max-width: 50rem;
+  width: 90%;
+  margin: auto;
   .end__result {
-    font-size: 2rem;
+    font-size: 2.3rem;
     font-weight: 600;
     text-align: center;
+    padding: 0 1rem;
   }
+  table {
+    border-spacing: 1;
+    border-collapse: collapse;
+    background: rgb(243, 243, 243);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    font-weight: 700;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    td,
+    th {
+      padding-left: 2rem;
+    }
+
+    thead tr {
+      height: 60px;
+      background: #61afef;
+      color: white;
+      font-size: 1.3rem;
+    }
+
+    tbody tr {
+      height: 48px;
+      border-bottom: 1px solid #e3f1d5;
+      &:last-child {
+        border: 0;
+      }
+    }
+
+    td,
+    th {
+      font-size: 1.1rem;
+      text-align: left;
+      &.l {
+        text-align: right;
+      }
+      &.c {
+        text-align: center;
+      }
+      &.r {
+        text-align: center;
+      }
+    }
+  }
+
   .end__scoreboard {
     .end__player {
       position: relative;
@@ -247,13 +338,4 @@ a {
 
 .hidden {
   display: none;
-}
-.first {
-  background-color: #ffd700;
-}
-.second {
-  background-color: #d3d3d3;
-}
-.third {
-  background-color: #cd7f32;
 }

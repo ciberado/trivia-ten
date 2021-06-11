@@ -2,7 +2,8 @@ const socket = io();
 
 // Get username and room from URL
 const urlParams = new URLSearchParams(window.location.search);
-const username = urlParams.get("username");
+const namee = urlParams.get("username");
+const username = namee.charAt(0).toUpperCase() + namee.slice(1);
 const room = urlParams.get("room");
 
 // Join room
@@ -82,11 +83,14 @@ socket.on(
     question_div.classList.remove("hidden");
 
     number_text.innerHTML = number;
-    difficulty_text.innerHTML = difficulty;
+    difficulty_text.innerHTML =
+      difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
     if (number == 10) {
       difficulty_text.innerHTML = "hidden";
     }
-    category_text.innerHTML = category;
+    category_text.innerHTML = (
+      category.charAt(0).toUpperCase() + category.slice(1)
+    ).replace("Entertainment:", "");
     question_text.innerHTML = question;
     choice0_text.innerHTML = all_answers[0];
     choice1_text.innerHTML = all_answers[1];
@@ -101,7 +105,7 @@ let correct_sound = new this.Howl({
   volume: 0.25,
 });
 let wrong_sound = new this.Howl({
-  src: [`../sounds/wrong.ogg`],
+  src: [`../sounds/incorrect.wav`],
   volume: 0.25,
 });
 socket.on("results", ({ correct_answer }) => {
@@ -126,17 +130,25 @@ socket.on("leaderboard", ({ number, scores_in_room }) => {
   if (number == 10) {
     message = `Last question! Double points`;
   }
-  console.log(scores_in_room);
+  if (number == 11) {
+    message = `${scores_in_room[0].name} won with ${scores_in_room[0].score} points. Congrats!`;
+    let leaderboard_sound = new this.Howl({
+      src: [`../sounds/leaderboard.wav`],
+      volume: 0.25,
+    });
+    leaderboard_sound.play();
+  }
+
   scoreboard_div.innerHTML = "";
   document.querySelector(".end__result").innerHTML = message;
   for (i = 0; i < scores_in_room.length; i++) {
     const Template = `
-    <div class="end__player ${
-      i == 0 ? "first" : i == 2 ? "second" : i == 3 ? "third" : ""
-    } ">
-      <p class="end__name">${scores_in_room[i].name}</p>
-      <p class="end__score">${scores_in_room[i].score}</p>
-    </div>`;
+    <tr>
+      <td>${i}</td>
+      <td>${scores_in_room[i].name}</td>
+      <td>${scores_in_room[i].score}</td>
+    </tr>
+    `;
     scoreboard_div.insertAdjacentHTML("beforeend", Template);
   }
 

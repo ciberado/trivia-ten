@@ -10,8 +10,8 @@
   <body>
     <div class="topbar">
       <a class="topbar__logo" href="index.html">
-        <p class="topbar__logotop">TRIVIA</p>
-        <p class="topbar__logobottom">TEN</p>
+        <img class="topbar__logoicon" src="icon.svg" alt="" srcset="" />
+        <p class="topbar__logotext">Trivia Ten</p>
       </a>
     </div>
 
@@ -22,7 +22,7 @@
         <li id="wait_text" class="wait__text">
           Waiting for the leader to start the game...
         </li>
-        <li class="wait__text">Room id is #<span id="roomid_text"></span></li>
+        <li class="wait__text">Room id is: <span id="roomid_text"></span></li>
         <li class="wait__text">
           Players already in: <span id="players_text"></span>
         </li>
@@ -97,34 +97,30 @@
 
       <div class="end hidden">
         <p class="end__result">Question 0</p>
-        <div class="end__scoreboard">
-          <div class="end__player hidden">
-            <p class="end__name">Jeusto</p>
-            <p class="end__score">65</p>
-          </div>
-          <div class="end__player hidden">
-            <p class="end__name">Arhun</p>
-            <p class="end__score">43</p>
-          </div>
-          <div class="end__player hidden">
-            <p class="end__name">Test</p>
-            <p class="end__score">23</p>
-          </div>
-          <div class="end__player hidden">
-            <p class="end__name">Test</p>
-            <p class="end__score">23</p>
-          </div>
-          <div class="end__player hidden">
-            <p class="end__name">Test</p>
-            <p class="end__score">23</p>
-          </div>
-          <div class="end__player hidden">
-            <p class="end__name">Test</p>
-            <p class="end__score">23</p>
-          </div>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody class="end__scoreboard">
+            <tr>
+              <td>1</td>
+              <td>Jeusto</td>
+              <td>43</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Arhun</td>
+              <td>21</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
+
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"
       integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="
