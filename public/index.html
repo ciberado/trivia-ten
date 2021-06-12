@@ -8,50 +8,147 @@
     <title>Trivia Ten</title>
   </head>
   <body>
-    <div class="topbar">
-      <a class="topbar__logo" href="index.html">
-        <img class="topbar__logoicon" src="icon.svg" alt="" srcset="" />
-        <p class="topbar__logotext">Trivia Ten</p>
-      </a>
-    </div>
-
     <div class="home">
-      <ul class="home__rules">
+      <h1 class="title">Rules</h1>
+      <ul class="paragraph">
         <li>10 questions. 10 seconds for each question.</li>
+        <li>The score you get depends on the difficulty of the question.</li>
+        <li>Get more points by being the first to give a correct answer.</li>
         <li>
-          Hard question = 40 points
-          <br />
-          Medium question = 30 points
-          <br />
-          Easy question = 20 points
-        </li>
-        <li>10 bonus points for answering first.</li>
-        <li>
-          Last question gives double the points but the difficulty is hidden.
+          The last question gives twice as many points but the difficulty is
+          hidden.
         </li>
       </ul>
-      <form action="trivia.html" class="home__menu">
+      <div class="choices">
         <input
           required
-          id="username"
+          id="username_input"
           name="username"
-          class="home__username-input"
+          class="input"
           type="text"
           placeholder="Choose username"
           value="jeusto"
+          autocomplete="off"
+          spellcheck="false"
         />
         <input
           required
+          id="room_input"
           name="room"
-          id="room"
-          class="home__room-input"
+          class="input"
           type="text"
           placeholder="Enter room id"
           value="test"
+          autocomplete="off"
+          spellcheck="false"
         />
-        <button class="home__join-btn">Join room</button>
-      </form>
+        <button id="join_btn" class="button">Join room</button>
+      </div>
     </div>
+
+    <div class="wait hidden">
+      <h1 class="title">Waiting...</h1>
+      <ul class="paragraph">
+        <li>Room id is: <span id="roomid_text"></span></li>
+        <li>Players already in: <span id="players_text"></span></li>
+        <li id="wait_text">Leader of the room has to start the game.</li>
+      </ul>
+      <div id="leader_div" class="choices hidden">
+        <select id="category_select" class="select">
+          <option selected value="0">Any category</option>
+          <option value="9">General knowledge</option>
+          <option value="10">Books</option>
+          <option value="11">Film</option>
+          <option value="12">Music</option>
+          <option value="13">Musicals & Theatres</option>
+          <option value="14">Television</option>
+          <option value="15">Video games</option>
+          <option value="16">Board games</option>
+          <option value="17">Nature</option>
+          <option value="18">Computers</option>
+          <option value="19">Mathematics</option>
+          <option value="20">Mythology</option>
+          <option value="21">Sports</option>
+          <option value="22">Geography</option>
+          <option value="23">History</option>
+          <option value="24">Politics</option>
+          <option value="25">Art</option>
+          <option value="26">Celebrities</option>
+          <option value="27">Animals</option>
+          <option value="28">Vehicules</option>
+          <option value="29">Comics</option>
+          <option value="30">Gadgets</option>
+          <option value="31">Anime & Manga</option>
+          <option value="32">Cartoon & Animations</option>
+        </select>
+        <button id="startgame_btn" class="button">Start game</button>
+      </div>
+    </div>
+
+    <div id="game slide-in-right">
+      <div class="question hidden">
+        <p class="question__info">
+          <span id="difficulty_text"></span> -
+          <span id="category_text" class="question__info"></span>
+        </p>
+        <h1 class="question__number">
+          Question <span id="number_text"></span>/10
+        </h1>
+        <div id="timer" class="question__timer"></div>
+        <p id="question_text" class="question__question"></p>
+        <div class="question__choices">
+          <button
+            id="0"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="1"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="2"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+          <button
+            id="3"
+            onClick="submit_choice(this.id)"
+            class="question__choice"
+          ></button>
+        </div>
+      </div>
+
+      <div class="leaderboard hidden">
+        <h1 class="title leaderboard__text">Question 0</h1>
+        <table class="leaderboard__table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody class="leaderboard__tablebody">
+            <tr>
+              <td>1</td>
+              <td>Jeusto</td>
+              <td>43</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Arhun</td>
+              <td>21</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/progressbar.js"></script>
+    <script src="/js/howler.js"></script>
+    <script src="/js/main.js"></script>
   </body>
 </html>
