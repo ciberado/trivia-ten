@@ -8,22 +8,16 @@ const server = http.createServer(app);
 const socketio = require("socket.io");
 const io = socketio(server);
 
-// Display qustion
-var user;
-var is_first_to_answer;
-var current_question;
-var score_to_add;
-
 const {
-  user_join,
-  user_leave,
-  get_room_users,
+  add_user,
+  get_room_usernames,
+  remove_user,
+  add_ten_questions,
+  get_a_question,
+  get_last_question,
   get_room_scores,
-  set_score_zero,
   add_score,
 } = require("./utils/users");
-
-const { response } = require("express");
 
 // Set static folder
 app.use(express.static(path.join(__dirname, "public")));
@@ -33,161 +27,131 @@ io.on("connection", (socket) => {
   console.log(`⚠ New web socket connected with id "${socket.id}"`);
 
   // When user joins room
-  socket.on("join_room", ({ username, room }) => {
-    // Store user information in the users list
-    user = user_join(socket.id, username, room);
+  socket.on("user_joined_room", ({ username, room }) => {
+    let current = add_user(socket.id, username, room);
+    let current_room = current.room;
+    let current_user = current.user;
+
+    let current_question;
+    let current_room_scores;
+    let current_index;
+
+    let is_first_to_answer;
+    var score_to_add;
 
     // Make user join the room
-    socket.join(user.room);
-    console.log(`⚠ "${username}" just joined room "${room}"`);
+    socket.join(room);
 
     // Display waiting room message
-    users_in_room = get_room_users(room);
-    io.in(room).emit("waiting_step", { room, users_in_room });
+    io.in(room).emit("display_wait", {
+      room: current_room.room_name,
+      users_in_room: get_room_usernames(current_room),
+    });
 
     // Remove user if he leaves
     socket.on("disconnect", () => {
-      console.log(`⚠ "${username}" just left room "${room}"`);
-      const user = user_leave(socket.id);
-      io.in(user.room).emit("waiting_step", {
-        room: user.room,
-        users_in_room: get_room_users(user.room),
+      remove_user(current_user, current_room);
+
+      io.in(room).emit("display_wait", {
+        room: current_room.room_name,
+        users_in_room: get_room_usernames(current_room).join(", "),
       });
     });
-  });
 
-  // When leader starts game
-  socket.on("start_game", (category_selected) => {
-    // Set all scores to zero
-    console.log(`⚠ Start game requested from user`);
+    // When leader starts game
+    socket.on("ask_start_game", (category_selected) => {
+      // Get ten questions from api
+      fetch(
+        `https://opentdb.com/api.php?amount=10&type=multiple&category=${category_selected}`
+      )
+        .then((res) => res.json())
+        .then(function (json) {
+          // Add the ten questions to the room
+          add_ten_questions(current_room, json.results);
 
-    // Retrieve ten questions from api
-    console.log(`⚠ Ten questions requested from api`);
+          // Start game
+          console.log(
+            `⚠ Starting game in room "${current_room.room_name}" with "${
+              get_room_usernames(current_room).length
+            }" players`
+          );
+          console.log(get_room_usernames(current_room));
+        });
+    });
 
-    // Get ten questions from api
-    fetch(
-      `https://opentdb.com/api.php?amount=10&type=multiple&category=${category_selected}`
-    )
-      .then((res) => res.json())
-      .then(function (json) {
-        ten_questions = json.results;
-        console.log(ten_questions);
-        // Start game
-        start_game();
+    // When leader requests a question
+    socket.on("ask_question", (index) => {
+      // Get next question
+      current_question = get_a_question(current_room);
+      current_index = index;
+      is_first_to_answer = true;
+
+      // Display question
+      io.in(room).emit("display_question", {
+        index,
+        difficulty: current_question.difficulty,
+        category: current_question.category,
+        question: current_question.question,
+        all_answers: current_question.incorrect_answers,
       });
-  });
+      console.log(`\n${current_question.correct_answer} is the answer`);
+    });
 
-  // Receive user choice and add his score
-  socket.on("send_choice", (choice_id) => {
-    console.log(`RECEIVED CHOICE FROM CLIENT ${socket.id}`);
-    console.log(`CHOICES = ${current_question.all_answers}`);
+    // Receive user choice and add his score
+    socket.on("user_sent_choice", (choice_id) => {
+      let current_question = get_last_question(current_room);
 
-    // Calculate score
-    score_to_add = 0;
-    if (choice_id == current_question.correct_answer) {
-      if (current_question.difficulty == "easy") {
-        score_to_add = 20;
-      } else if (current_question.difficulty == "medium") {
-        score_to_add = 30;
-      } else {
-        score_to_add = 40;
-      }
-      if (is_first_to_answer) {
-        score_to_add += 10;
-        is_first_to_answer = false;
-      }
-      if (i == 10) {
-        score_to_add *= 2;
-      }
+      // Calculate score
+      score_to_add = 0;
+      if (choice_id == current_question.correct_answer) {
+        if (current_question.difficulty == "easy") {
+          console.log(`easy = 20`);
+          score_to_add = 20;
+        } else if (current_question.difficulty == "medium") {
+          score_to_add = 30;
+          console.log(`medium = 30`);
+        } else {
+          score_to_add = 40;
+          console.log(`hard = 40`);
+        }
+        if (is_first_to_answer) {
+          console.log(`is first to answer, +10`);
+          score_to_add += 10;
+          is_first_to_answer = false;
+        }
+        if (current_index == 9) {
+          console.log(`is last question, *2`);
+          score_to_add *= 2;
+        }
 
-      // Add score to user
-      add_score(socket.id, score_to_add);
-    }
+        // Add score to user
+        console.log(`adding ${score_to_add} pts`);
+        console.log(`current room = ${current_room.room_name}`);
+        add_score(current_room, current_user.user_id, score_to_add);
+      }
+    });
+
+    // When leader requests a result
+    socket.on("ask_results", (index) => {
+      // Display result
+      io.in(room).emit("display_results", {
+        correct_answer: current_question.correct_answer,
+      });
+    });
+
+    // When leader requests a leaderboard
+    socket.on("ask_leaderboard", (index) => {
+      // Get next question
+      current_room_scores = get_room_scores(current_room);
+
+      // Display question
+      io.in(room).emit("display_leaderboard", {
+        index,
+        scores_in_room: current_room_scores,
+      });
+    });
   });
 });
-
-// Game function
-async function start_game() {
-  i = 0;
-  while (i < 10) {
-    is_first_to_answer = true;
-
-    // Get question
-    current_question = get_next_question(ten_questions, i);
-    console.log(current_question);
-    console.log(`All answers = ${current_question.responses}`);
-    console.log(
-      `⚠ Answer of ${i + 1}${i + 1}${i + 1} is 
-      "${current_question.correct_answer}"`
-    );
-
-    // Display question
-    io.in(user.room).emit("show_question", {
-      number: i + 1,
-      difficulty: current_question.difficulty,
-      category: current_question.category,
-      question: current_question.question,
-      all_answers: current_question.all_answers,
-    });
-
-    // Wait 10 seconds
-    await sleep(10000);
-
-    // Display results
-    io.in(user.room).emit("results", {
-      correct_answer: current_question.correct_answer,
-    });
-
-    // Wait 2 seconds
-    await sleep(2000);
-
-    // Display leaderboard or end
-    io.in(user.room).emit("leaderboard", {
-      number: i + 2,
-      scores_in_room: get_room_scores(user.room),
-    });
-
-    // Wait 2 seconds
-    await sleep(2500);
-
-    // Go next
-    i++;
-  }
-  console.log(`⚠ End of the quiz`);
-}
-
-// Delay function
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Get next question
-function get_next_question(ten_questions, index) {
-  // Shuffle answers
-  let all_answers = [];
-  all_answers[0] = ten_questions[index].correct_answer;
-  all_answers[1] = ten_questions[index].incorrect_answers[0];
-  all_answers[2] = ten_questions[index].incorrect_answers[1];
-  all_answers[3] = ten_questions[index].incorrect_answers[2];
-  for (let i = all_answers.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
-    [all_answers[i], all_answers[j]] = [all_answers[j], all_answers[i]];
-  }
-
-  correct_answer = all_answers.findIndex(
-    (element) => element == ten_questions[index].correct_answer
-  );
-
-  // Return question object
-  obj = {
-    question: ten_questions[index].question,
-    category: ten_questions[index].category,
-    difficulty: ten_questions[index].difficulty,
-    correct_answer: correct_answer,
-    all_answers: all_answers,
-  };
-  return obj;
-}
 
 // Start server on port
 const PORT = process.env.PORT || 3000;

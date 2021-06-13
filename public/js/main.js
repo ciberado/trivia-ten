@@ -1,7 +1,11 @@
 // Socketio
 const socket = io();
+let username;
+let room;
+let category_selected;
+let index = 0;
 
-// Sounds
+// Load sounds
 let correct_sound = new this.Howl({
   src: [`../sounds/correct.ogg`],
   volume: 0.25,
@@ -17,6 +21,7 @@ const home_div = document.querySelector(".home");
 const username_input = document.getElementById("username_input");
 const room_input = document.getElementById("room_input");
 const join_btn = document.getElementById("join_btn");
+
 // Wait
 const wait_div = document.querySelector(".wait");
 const roomid_text = document.getElementById("roomid_text");
@@ -24,6 +29,7 @@ const players_text = document.getElementById("players_text");
 const leader_div = document.getElementById("leader_div");
 const category_select = document.getElementById("category_select");
 const startgame_btn = document.getElementById("startgame_btn");
+
 // Question
 const question_div = document.querySelector(".question");
 const timer = document.getElementById("timer");
@@ -32,31 +38,34 @@ const difficulty_text = document.getElementById("difficulty_text");
 const category_text = document.getElementById("category_text");
 const question_text = document.getElementById("question_text");
 const choice_buttons = document.getElementsByClassName("question__choice");
+
 // Scoreboard
 const leaderboard_div = document.querySelector(".leaderboard");
 const leaderboard_text = document.querySelector(".leaderboard__text");
 const leaderboard = document.querySelector(".leaderboard__tablebody");
 
 // Make user join the room when join btn clicked
-let username;
-let room;
 join_btn.addEventListener("click", function () {
   // Get info
-  named = username_input.value;
-  username = named.charAt(0).toUpperCase() + named.slice(1);
+  username =
+    username_input.value.charAt(0).toUpperCase() +
+    username_input.value.slice(1);
   room = room_input.value;
+
   // Show waiting room
   document.querySelector(".home").classList.add("hidden");
   document.querySelector(".wait").classList.remove("hidden");
+
   // Make join
-  socket.emit("join_room", { username, room });
+  socket.emit("user_joined_room", { username, room });
 });
 
-// Display waiting room
-socket.on("waiting_step", ({ room, users_in_room }) => {
+// Display or change waiting room content
+socket.on("display_wait", ({ room, users_in_room }) => {
   // Display info
   roomid_text.innerHTML = room;
-  players_text.innerHTML = users_in_room;
+  players_text.innerHTML = users_in_room.join(", ");
+
   // Show start button if it's the first player
   if (username == users_in_room[0]) {
     leader_div.classList.remove("hidden");
@@ -64,16 +73,34 @@ socket.on("waiting_step", ({ room, users_in_room }) => {
 });
 
 // Start game when leader clicks on start btn
-startgame_btn.addEventListener("click", function () {
+startgame_btn.addEventListener("click", async function () {
   // Emit socket to start game
-  let category_selected = category_select.value;
-  socket.emit("start_game", category_selected);
+  socket.emit("ask_start_game", category_select.value);
+  await sleep(800);
+
+  // Loop through all questions
+  while (index < 10) {
+    // Ask for question
+    socket.emit("ask_question", index);
+    await sleep(8000);
+
+    // Ask for results
+    socket.emit("ask_results", index);
+    await sleep(2000);
+
+    // Ask for leaderboard
+    socket.emit("ask_leaderboard", index);
+    await sleep(3000);
+
+    // Go next
+    index++;
+  }
 });
 
 // Display question
 socket.on(
-  "show_question",
-  ({ number, difficulty, category, question, all_answers }) => {
+  "display_question",
+  ({ index, difficulty, category, question, all_answers }) => {
     // Enable slide in animation
     leaderboard_div.classList.remove("slide-in-right");
     leaderboard_div.classList.add("slide-out-left");
@@ -98,7 +125,7 @@ socket.on(
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 1,
       easing: "linear",
-      duration: 10000,
+      duration: 8000,
       color: "#eebbc3",
       trailColor: "#586497",
       trailWidth: 0.5,
@@ -107,10 +134,10 @@ socket.on(
     bar.animate(1.0);
 
     // Display question
-    number_text.innerHTML = number;
+    number_text.innerHTML = index + 1;
     difficulty_text.innerHTML =
       difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-    if (number == 10) {
+    if (index == 10) {
       difficulty_text.innerHTML = "hidden";
     }
     category_text.innerHTML = (
@@ -124,22 +151,8 @@ socket.on(
   }
 );
 
-// Function to send user answer to server
-function submit_choice(choice_id) {
-  // Show choice
-  document.getElementById(choice_id).classList.add("selected");
-
-  // Disable buttons
-  for (let i = 0; i < choice_buttons.length; i++) {
-    choice_buttons[i].disabled = true;
-  }
-
-  // Send choice to server
-  socket.emit("send_choice", choice_id);
-}
-
-// Show results after each question
-socket.on("results", ({ correct_answer }) => {
+// Display results
+socket.on("display_results", ({ correct_answer }) => {
   let choice = document.querySelector(".selected");
   let answers = document.getElementsByClassName("question__choice");
   if (choice != null && choice.id == correct_answer) {
@@ -155,14 +168,14 @@ socket.on("results", ({ correct_answer }) => {
   }
 });
 
-// Show leaderboard after each result
-socket.on("leaderboard", ({ number, scores_in_room }) => {
-  let message = `Question ${number}`;
-  if (number == 10) {
+// Display leaderboard
+socket.on("display_leaderboard", ({ index, scores_in_room }) => {
+  let message = `Question ${index + 2}`;
+  if (index == 8) {
     message = `Last question! Double points`;
   }
-  if (number == 11) {
-    message = `${scores_in_room[0].name} won with ${scores_in_room[0].score} points.`;
+  if (index == 9) {
+    message = `${scores_in_room[0].user_name} won with ${scores_in_room[0].score} points.`;
     let leaderboard_sound = new this.Howl({
       src: [`../sounds/leaderboard.wav`],
       volume: 0.25,
@@ -175,9 +188,9 @@ socket.on("leaderboard", ({ number, scores_in_room }) => {
   for (i = 0; i < scores_in_room.length; i++) {
     const Template = `
     <tr>
-      <td >${i + 1}</td>
-      <td>${scores_in_room[i].name}</td>
-      <td>${scores_in_room[i].score}</td>
+    <td>${i + 1}</td>
+    <td>${scores_in_room[i].user_name}</td>
+    <td>${scores_in_room[i].score}</td>
     </tr>
     `;
     leaderboard.insertAdjacentHTML("beforeend", Template);
@@ -191,3 +204,22 @@ socket.on("leaderboard", ({ number, scores_in_room }) => {
   leaderboard_div.classList.remove("hidden");
   question_div.classList.add("hidden");
 });
+
+// Send user answer to server when clicking answer
+function submit_choice(choice_id) {
+  // Show choice
+  document.getElementById(choice_id).classList.add("selected");
+
+  // Disable buttons
+  for (let i = 0; i < choice_buttons.length; i++) {
+    choice_buttons[i].disabled = true;
+  }
+
+  // Send choice to server
+  socket.emit("user_sent_choice", choice_id);
+}
+
+// Delay function
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
