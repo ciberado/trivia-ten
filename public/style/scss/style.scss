@@ -20,7 +20,6 @@ body {
   font-family: Inter;
   margin: auto;
   padding: 0;
-  padding-top: 5rem;
   width: 80%;
   max-width: 700px;
   background-color: #232946;
@@ -50,6 +49,25 @@ li {
   padding-bottom: 0.5rem;
 }
 
+.logo {
+  margin: auto;
+  margin-bottom: 2rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  img {
+    width: 6rem;
+  }
+  h1 {
+    margin: -1.75rem 0 0 0;
+    background: -webkit-linear-gradient(0deg, #dfa0a9 0%, #ffd3d9 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
 .timer {
   margin-top: -0.5rem;
   height: 0.5rem;
@@ -272,4 +290,11 @@ li {
 
 .hidden {
   display: none;
+  color: #a86771;
+  color: #dda0a9;
+  color: #eebbc3;
+
+  color: #dfa0a9;
+  color: #ffd3d9;
+  color: #ffe6ea;
 }

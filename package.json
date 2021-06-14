@@ -7,7 +7,7 @@
     "start": "node server",
     "dev": "nodemon server"
   },
-  "author": "Arhun Saday",
+  "author": "Jeusto - Arhun Saday",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",

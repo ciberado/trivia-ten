@@ -106,7 +106,6 @@ function get_room_scores(current_room) {
   return current_room.users.sort(compare);
 }
 
-// Add score to user
 function add_score(current_room, userid, score) {
   let index;
   index = current_room.users.findIndex((el) => el.user_id == userid);

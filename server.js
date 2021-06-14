@@ -17,15 +17,13 @@ const {
   get_last_question,
   get_room_scores,
   add_score,
-} = require("./utils/users");
+} = require("./rooms");
 
 // Set static folder
 app.use(express.static(path.join(__dirname, "public")));
 
 // Run when client connects
 io.on("connection", (socket) => {
-  console.log(`⚠ New web socket connected with id "${socket.id}"`);
-
   // When user joins room
   socket.on("user_joined_room", ({ username, room }) => {
     let current = add_user(socket.id, username, room);
@@ -68,14 +66,6 @@ io.on("connection", (socket) => {
         .then(function (json) {
           // Add the ten questions to the room
           add_ten_questions(current_room, json.results);
-
-          // Start game
-          console.log(
-            `⚠ Starting game in room "${current_room.room_name}" with "${
-              get_room_usernames(current_room).length
-            }" players`
-          );
-          console.log(get_room_usernames(current_room));
         });
     });
 
@@ -94,7 +84,6 @@ io.on("connection", (socket) => {
         question: current_question.question,
         all_answers: current_question.incorrect_answers,
       });
-      console.log(`\n${current_question.correct_answer} is the answer`);
     });
 
     // Receive user choice and add his score
@@ -105,28 +94,21 @@ io.on("connection", (socket) => {
       score_to_add = 0;
       if (choice_id == current_question.correct_answer) {
         if (current_question.difficulty == "easy") {
-          console.log(`easy = 20`);
           score_to_add = 20;
         } else if (current_question.difficulty == "medium") {
           score_to_add = 30;
-          console.log(`medium = 30`);
         } else {
           score_to_add = 40;
-          console.log(`hard = 40`);
         }
         if (is_first_to_answer) {
-          console.log(`is first to answer, +10`);
           score_to_add += 10;
           is_first_to_answer = false;
         }
         if (current_index == 9) {
-          console.log(`is last question, *2`);
           score_to_add *= 2;
         }
 
         // Add score to user
-        console.log(`adding ${score_to_add} pts`);
-        console.log(`current room = ${current_room.room_name}`);
         add_score(current_room, current_user.user_id, score_to_add);
       }
     });
@@ -155,4 +137,4 @@ io.on("connection", (socket) => {
 
 // Start server on port
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`★ Server running on port ${PORT}`));
+server.listen(PORT);

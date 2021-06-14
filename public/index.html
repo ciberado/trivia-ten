@@ -5,15 +5,23 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style/css/style.css" />
+    <link rel="shortcut icon" href="logo.png" />
     <title>Trivia Ten</title>
   </head>
   <body>
+    <a href="" class="logo">
+      <img src="logo.svg" alt="" srcset="" />
+      <h1>Trivia Ten</h1>
+    </a>
+
     <div class="home">
       <h1 class="title">Rules</h1>
       <ul class="paragraph">
         <li>10 questions. 10 seconds for each question.</li>
         <li>The score you get depends on the difficulty of the question.</li>
-        <li>Get more points by being the first to give a correct answer.</li>
+        <li>
+          Get more points by being the first one to give a correct answer.
+        </li>
         <li>
           The last question gives twice as many points but the difficulty is
           hidden.
@@ -27,7 +35,6 @@
           class="input"
           type="text"
           placeholder="Choose username"
-          value="jeusto"
           autocomplete="off"
           spellcheck="false"
         />
@@ -38,7 +45,6 @@
           class="input"
           type="text"
           placeholder="Enter room id"
-          value="test"
           autocomplete="off"
           spellcheck="false"
         />
@@ -55,7 +61,7 @@
       </ul>
       <div id="leader_div" class="choices hidden">
         <select id="category_select" class="select">
-          <option value="0">Any category</option>
+          <option selected value="0">Any category</option>
           <option value="9">General knowledge</option>
           <option value="10">Books</option>
           <option value="11">Film</option>
@@ -65,7 +71,7 @@
           <option value="15">Video games</option>
           <option value="16">Board games</option>
           <option value="17">Nature</option>
-          <option selected value="18">Computers</option>
+          <option value="18">Computers</option>
           <option value="19">Mathematics</option>
           <option value="20">Mythology</option>
           <option value="21">Sports</option>
@@ -125,23 +131,12 @@
         <table class="leaderboard__table">
           <thead>
             <tr>
+              <th>Rank</th>
               <th>Username</th>
               <th>Points</th>
-              <th>Rank</th>
             </tr>
           </thead>
-          <tbody class="leaderboard__tablebody">
-            <tr>
-              <td>1</td>
-              <td>Jeusto</td>
-              <td>43</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>Arhun</td>
-              <td>21</td>
-            </tr>
-          </tbody>
+          <tbody class="leaderboard__tablebody"></tbody>
         </table>
       </div>
     </div>

@@ -52,12 +52,17 @@ join_btn.addEventListener("click", function () {
     username_input.value.slice(1);
   room = room_input.value;
 
-  // Show waiting room
-  document.querySelector(".home").classList.add("hidden");
-  document.querySelector(".wait").classList.remove("hidden");
+  // Check if inputs are not empty
+  if (username == "" || room == "") {
+    alert("Please enter username and room id to play");
+  } else {
+    // Show waiting room
+    document.querySelector(".home").classList.add("hidden");
+    document.querySelector(".wait").classList.remove("hidden");
 
-  // Make join
-  socket.emit("user_joined_room", { username, room });
+    // Make join
+    socket.emit("user_joined_room", { username, room });
+  }
 });
 
 // Display or change waiting room content
