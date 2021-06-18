@@ -1,3 +1,23 @@
+// Logo animation
+#eyes {
+  animation: eyes 5s infinite;
+  transform-origin: center;
+}
+@keyframes eyes {
+  0% {
+    transform: translateX(0%);
+  }
+  40% {
+    transform: translateX(-2%) translateY(2%);
+  }
+  60% {
+    transform: translateX(1%) translateY(2%);
+  }
+  100% {
+    transform: translateX(0%) translateY(0%);
+  }
+}
+
 // Exit
 .slide-out-left {
   -webkit-animation: slide-out-left 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53)
