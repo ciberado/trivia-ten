@@ -181,11 +181,21 @@ socket.on("display_leaderboard", ({ index, scores_in_room }) => {
   }
   if (index == 9) {
     message = `${scores_in_room[0].user_name} won with ${scores_in_room[0].score} points.`;
+
     let leaderboard_sound = new this.Howl({
       src: [`../sounds/leaderboard.wav`],
       volume: 0.25,
     });
     leaderboard_sound.play();
+    confetti({
+      particleCount: 250,
+      startVelocity: 30,
+      spread: 360,
+      count: 200,
+      origin: {
+        y: 0.4,
+      },
+    });
   }
 
   leaderboard.innerHTML = "";
