@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
     socket.on("ask_start_game", (category_selected) => {
       // Get ten questions from api
       fetch(
-        `https://opentdb.com/api.php?amount=10&type=multiple&category=${category_selected}`
+        `http://localhost:3000/demo.json`
       )
         .then((res) => res.json())
         .then(function (json) {
@@ -75,12 +75,12 @@ io.on("connection", (socket) => {
       current_question = get_a_question(current_room);
       current_index = index;
       is_first_to_answer = true;
-
+console.log(JSON.stringify(current_question));
       // Display question
       io.in(room).emit("display_question", {
         index,
-        difficulty: current_question.difficulty,
-        category: current_question.category,
+        difficulty: current_question?.difficulty || "medium",
+        category: current_question?.category || "default",
         question: current_question.question,
         all_answers: current_question.incorrect_answers,
       });

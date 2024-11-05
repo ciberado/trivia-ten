@@ -87,7 +87,7 @@ startgame_btn.addEventListener("click", async function () {
   while (index < 10) {
     // Ask for question
     socket.emit("ask_question", index);
-    await sleep(8000);
+    await sleep(16000);
 
     // Ask for results
     socket.emit("ask_results", index);
@@ -130,7 +130,7 @@ socket.on(
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 1,
       easing: "linear",
-      duration: 8000,
+      duration: 16000,
       color: "#eebbc3",
       trailColor: "#586497",
       trailWidth: 0.5,

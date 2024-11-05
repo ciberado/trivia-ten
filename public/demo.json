@@ -1,0 +1,94 @@
+{
+    "results": [
+        {
+            "question": "What is the primary purpose of AWS Regions?",
+            "correct_answer": "To provide isolated geographic areas for deploying resources.",
+            "incorrect_answers": [
+                "To serve as content delivery networks for caching.",
+                "To manage user access and permissions globally.",
+                "To monitor application performance across multiple locations."
+            ]
+        },
+        {
+            "question": "How many Availability Zones does a typical AWS Region contain?",
+            "correct_answer": "At least two isolated locations.",
+            "incorrect_answers": [
+                "Only one location.",
+                "Five or more locations.",
+                "Up to three locations."
+            ]
+        },
+        {
+            "question": "What is an edge location in AWS primarily used for?",
+            "correct_answer": "Caching content to reduce latency for end users.",
+            "incorrect_answers": [
+                "Storing user data securely in the cloud.",
+                "Deploying applications in multiple regions.",
+                "Managing access to AWS services."
+            ]
+        },
+        {
+            "question": "Which statement best describes the relationship between Regions and Availability Zones?",
+            "correct_answer": "Regions consist of multiple Availability Zones for redundancy.",
+            "incorrect_answers": [
+                "Availability Zones are larger than Regions.",
+                "Regions are subsets of Availability Zones.",
+                "Each Availability Zone operates independently without a Region."
+            ]
+        },
+        {
+            "question": "What is the significance of AWS's global footprint?",
+            "correct_answer": "It allows customers to deploy applications closer to their users worldwide.",
+            "incorrect_answers": [
+                "It limits the number of services available in each region.",
+                "It ensures all data is stored within a single geographic area.",
+                "It simplifies billing by consolidating all resources in one location."
+            ]
+        },
+        {
+            "question": "Which of the following best describes an AWS Availability Zone?",
+            "correct_answer": "A discrete data center with redundant power and networking.",
+            "incorrect_answers": [
+                "A geographical area containing multiple regions.",
+                "A service for managing user permissions globally.",
+                "A temporary storage solution for dynamic content."
+            ]
+        },
+        {
+            "question": "How does AWS ensure low latency for content delivery?",
+            "correct_answer": "By using edge locations to cache frequently accessed content.",
+            "incorrect_answers": [
+                "By centralizing all data in a single region.",
+                "By deploying all applications in multiple availability zones.",
+                "By limiting access to specific geographic areas."
+            ]
+        },
+        {
+            "question": "What distinguishes an edge location from an Availability Zone?",
+            "correct_answer": "Edge locations are specifically designed for content delivery, while AZs are for resource deployment.",
+            "incorrect_answers": [
+                "Edge locations are larger than Availability Zones.",
+                "AZs are used only for caching static content.",
+                "Both serve the same purpose in resource management."
+            ]
+        },
+        {
+            "question": "Which factor is NOT considered when selecting an AWS Region?",
+            "correct_answer": "The total number of users accessing the application.",
+            "incorrect_answers": [
+                "Compliance with data governance laws.",
+                "Proximity to end users for reduced latency.",
+                "Available services and features within the region."
+            ]
+        },
+        {
+            "question": "What is the primary benefit of deploying applications across multiple Availability Zones?",
+            "correct_answer": "Increased fault tolerance and high availability.",
+            "incorrect_answers": [
+                "Reduced costs due to shared resources.",
+                "Simplified management of cloud services.",
+                "Faster deployment times for applications."
+            ]
+        }
+    ]
+}
