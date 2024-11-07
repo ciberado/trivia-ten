@@ -1,3 +1,5 @@
+const QUESTION_TIME_SECONDS = 14;
+
 // Socketio
 const socket = io();
 let username;
@@ -87,7 +89,7 @@ startgame_btn.addEventListener("click", async function () {
   while (index < 10) {
     // Ask for question
     socket.emit("ask_question", index);
-    await sleep(16000);
+    await sleep(QUESTION_TIME_SECONDS*1000-2*1000);
 
     // Ask for results
     socket.emit("ask_results", index);
@@ -130,7 +132,7 @@ socket.on(
     var bar = new ProgressBar.Line(timer, {
       strokeWidth: 1,
       easing: "linear",
-      duration: 16000,
+      duration: QUESTION_TIME_SECONDS * 1000 - 2*1000,
       color: "#eebbc3",
       trailColor: "#586497",
       trailWidth: 0.5,

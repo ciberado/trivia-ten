@@ -1,3 +1,4 @@
+const fs = require('fs/promises');
 const path = require("path");
 const http = require("http");
 const express = require("express");
@@ -57,7 +58,12 @@ io.on("connection", (socket) => {
     });
 
     // When leader starts game
-    socket.on("ask_start_game", (category_selected) => {
+    socket.on("ask_start_game", async (category_selected) => {
+      const data = await fs.readFile(`questions/${category_selected}.json`, 'utf-8');
+      const json = JSON.parse(data);
+      add_ten_questions(current_room, json.results);
+      /*      
+      console.log(files)
       // Get ten questions from api
       fetch(
         `http://localhost:3000/demo.json`
@@ -67,6 +73,7 @@ io.on("connection", (socket) => {
           // Add the ten questions to the room
           add_ten_questions(current_room, json.results);
         });
+      */
     });
 
     // When leader requests a question
@@ -75,7 +82,6 @@ io.on("connection", (socket) => {
       current_question = get_a_question(current_room);
       current_index = index;
       is_first_to_answer = true;
-console.log(JSON.stringify(current_question));
       // Display question
       io.in(room).emit("display_question", {
         index,
