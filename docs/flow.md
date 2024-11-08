@@ -1,5 +1,7 @@
 # Flow
 
+## Original flow
+
 ```
 c:ask_start_game --> s:(read question bank)
 
