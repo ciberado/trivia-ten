@@ -62,18 +62,6 @@ io.on("connection", (socket) => {
       const data = await fs.readFile(`questions/${category_selected}.json`, 'utf-8');
       const json = JSON.parse(data);
       add_ten_questions(current_room, json.results);
-      /*      
-      console.log(files)
-      // Get ten questions from api
-      fetch(
-        `http://localhost:3000/demo.json`
-      )
-        .then((res) => res.json())
-        .then(function (json) {
-          // Add the ten questions to the room
-          add_ten_questions(current_room, json.results);
-        });
-      */
     });
 
     // When leader requests a question
