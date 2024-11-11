@@ -1,4 +1,4 @@
-const QUESTION_TIME_SECONDS = 14;
+const QUESTION_TIME_SECONDS = 18;
 
 // Socketio
 const socket = io();

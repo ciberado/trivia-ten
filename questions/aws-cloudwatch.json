@@ -1,0 +1,96 @@
+{
+    "response_code": 0,
+    "results": 
+[
+    {
+        "question": "You are tasked with monitoring the CPU utilization of your EC2 instances. Which AWS service would you use to collect and visualize these metrics?",
+        "correct_answer": "AWS CloudWatch",
+        "incorrect_answers": [
+            "AWS Lambda",
+            "Amazon S3",
+            "AWS IAM"
+        ]
+    },
+    {
+        "question": "During a performance review, you need to analyze the log data from your application stored in CloudWatch. Which feature would you use to perform this analysis?",
+        "correct_answer": "CloudWatch Logs Insights",
+        "incorrect_answers": [
+            "CloudWatch Metrics",
+            "CloudTrail Logs",
+            "AWS Config"
+        ]
+    },
+    {
+        "question": "You want to automate actions based on specific events occurring in your AWS environment. Which feature of AWS allows you to respond to such events?",
+        "correct_answer": "Event Bridge",
+        "incorrect_answers": [
+            "CloudWatch Alarms",
+            "Amazon SNS",
+            "AWS Auto Scaling"
+        ]
+    },
+    {
+        "question": "You have set up a CloudWatch Alarm to notify you via email when the average latency of your web application exceeds 500 milliseconds. Which AWS service integrates with CloudWatch for this notification?",
+        "correct_answer": "Amazon SNS",
+        "incorrect_answers": [
+            "Amazon RDS",
+            "AWS Lambda",
+            "AWS IAM"
+        ]
+    },
+    {
+        "question": "You want to visualize the performance of multiple AWS resources on a single screen. Which feature of CloudWatch allows you to create custom visualizations?",
+        "correct_answer": "CloudWatch Dashboards",
+        "incorrect_answers": [
+            "CloudTrail",
+            "AWS Config",
+            "Amazon S3"
+        ]
+    },
+    {
+        "question": "Your application generates logs that you want to retain for compliance purposes. How can you manage the retention of these logs in CloudWatch?",
+        "correct_answer": "Set a retention policy for the log group.",
+        "incorrect_answers": [
+            "Manually download logs every month.",
+            "Use AWS Lambda to delete old logs.",
+            "Logs are retained indefinitely by default."
+        ]
+    },
+    {
+        "question": "You need to monitor specific error messages in your application logs. What feature of CloudWatch Logs can you use to filter and extract these messages?",
+        "correct_answer": "Log Filters",
+        "incorrect_answers": [
+            "CloudWatch Dashboards",
+            "CloudTrail Insights",
+            "AWS Systems Manager"
+        ]
+    },
+    {
+        "question": "To enhance security, you want to ensure that all access to your CloudWatch Logs is logged. Which AWS service should you enable to track API calls made to CloudWatch Logs?",
+        "correct_answer": "AWS CloudTrail",
+        "incorrect_answers": [
+            "AWS Config",
+            "Amazon Inspector",
+            "AWS Shield"
+        ]
+    },
+    {
+        "question": "You have configured your application to send logs to CloudWatch Logs, but they are not appearing as expected. What is a common reason for this issue?",
+        "correct_answer": "The application is using a Role that doesn't have the proper permissions.",
+        "incorrect_answers": [
+            "CloudWatch does not support the log format.",
+            "You have exceeded your account's log storage limit.",
+            "The IAM role has too many permissions."
+        ]
+    },
+    {
+        "question": "You want to ensure that your application logs are encrypted at rest in CloudWatch Logs. What feature should you enable to achieve this?",
+        "correct_answer": "Enable server-side encryption using AWS KMS.",
+        "incorrect_answers": [
+            "Use IAM policies to restrict access.",
+            "Enable CloudTrail logging.",
+            "Set a retention policy for the logs."
+        ]
+    }
+]
+}

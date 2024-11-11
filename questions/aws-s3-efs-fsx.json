@@ -1,0 +1,95 @@
+{
+  "response_code": 0,
+  "results": [
+    {
+      "question": "You are developing a web application that requires storing user-uploaded images. What is the primary purpose of Amazon S3 in this scenario?",
+      "correct_answer":         "To provide an ingestion mechanism and become the long term storage solution for the images.",
+      "incorrect_answers": [
+        "To run serverless functions for image processing.",
+        "To manage user authentication and authorization.",
+        "To become the final destination of those images, but not the ingestion mechanism."
+      ]
+    },
+    {
+      "question": "Your company needs to ensure that all uploaded files are accessible only by specific users. Which feature of Amazon S3 would you use to implement this?",
+      "correct_answer": "The general IAM integration, setting the corresponding policies for the authorized users.",
+      "incorrect_answers": [
+        "Exclusively Access Control Lists.",
+        "You need to run an EC2 instance acting as a proxy.",
+        "The CloudFront CDN allows to set this kind of fine-grained permissions."
+      ]
+    },
+    {
+      "question": "You have a large dataset that is rarely accessed but must be retained for compliance reasons. Which Amazon S3 storage class would be most cost-effective?",
+      "correct_answer": "S3 Glacier.",
+      "incorrect_answers": [
+        "S3 Standard.",
+        "S3 Intelligent-Tiering.",
+        "S3 One Zone-IA."
+      ]
+    },
+    {
+      "question": "In your application, you need to ensure that users can upload files directly to S3 without exposing AWS credentials. Which method should you use?",
+      "correct_answer": "Presigned URLs.",
+      "incorrect_answers": [
+        "IAM user credentials.",
+        "AWS Lambda functions.",
+        "Direct API Gateway integration."
+      ]
+    },
+    {
+      "question": "During a disaster recovery drill, you need to restore an older version of a file stored in S3. What feature allows you to achieve this?",
+      "correct_answer": "S3 Versioning.",
+      "incorrect_answers": [
+        "Lifecycle Policies.",
+        "Cross-Region Replication.",
+        "S3 Transfer Acceleration."
+      ]
+    },
+    {
+      "question": "You are building a static website hosted on Amazon S3. What must you configure to ensure that the website is publicly accessible?",
+      "correct_answer": "Set the bucket policy to allow public read access and configure the ACLs.",
+      "incorrect_answers": [
+        "Just setting the corresponding ACL for allowing public read.",
+        "Use IAM roles for public access.",
+        "Just unlock public access blocking for the bucket."
+      ]
+    },
+    {
+      "question": "You are tasked with providing a scalable file storage solution for multiple EC2 Linux instances that need to share data. Which AWS service would you choose for this purpose?",
+      "correct_answer": "Amazon EFS (Elastic File System).",
+      "incorrect_answers": [
+        "Amazon S3.",
+        "Amazon FSx for Windows File Server.",
+        "Amazon RDS."
+      ]
+    },    
+    {
+      "question": "Your company requires a managed Windows file system that integrates seamlessly with Active Directory. Which AWS service should you implement?",
+      "correct_answer": "Amazon FSx for Windows File Server.",
+      "incorrect_answers": [
+        "Amazon EFS.",
+        "Amazon S3.",
+        "AWS Storage Gateway."
+      ]
+    },
+    {
+      "question": "When configuring Amazon EFS, which of the following features allows you to control access to the file system based on user permissions?",
+      "correct_answer": "POSIX permissions and access points.",
+      "incorrect_answers": [
+        "IAM roles only.",
+        "Bucket policies.",
+        "Security groups."
+      ]
+    },
+    {
+      "question": "In a scenario where your team needs to migrate existing Windows-based applications that rely on SMB protocol, which AWS service would be the most suitable choice?",
+      "correct_answer": "Amazon FSx for Windows File Server.",
+      "incorrect_answers": [
+        "Amazon EFS.",
+        "AWS Elastic Beanstalk.",
+        "AWS Lambda."
+      ]
+    }
+  ]
+}
