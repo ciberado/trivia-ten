@@ -23,6 +23,12 @@ const {
 // Set static folder
 app.use(express.static(path.join(__dirname, "public")));
 
+async function sleep(timeoutInMs) {
+  return new Promise((resolve, reject) => {
+    setTimeout(()=>resolve(), timeoutInMs);
+  });
+}
+
 // Run when client connects
 io.on("connection", (socket) => {
   // When user joins room
@@ -62,6 +68,27 @@ io.on("connection", (socket) => {
       const data = await fs.readFile(`questions/${category_selected}.json`, 'utf-8');
       const json = JSON.parse(data);
       add_ten_questions(current_room, json.results);
+
+      for (let i=0; i < 10; i++) {
+        const current_question = get_a_question(current_room);
+        io.in(room).emit("display_question", {
+          index : i,
+          difficulty: current_question?.difficulty || "medium",
+          category: current_question?.category || "default",
+          question: current_question.question,
+          all_answers: current_question.incorrect_answers,
+        });
+  
+        await sleep(1000*18);
+
+        // Display result
+        io.in(room).emit("display_results", {
+          correct_answer: current_question.correct_answer,
+        });
+
+        await sleep(1000*3);
+      }
+
     });
 
     // When leader requests a question

@@ -83,6 +83,7 @@ socket.on("display_wait", ({ room, users_in_room }) => {
 startgame_btn.addEventListener("click", async function () {
   // Emit socket to start game
   socket.emit("ask_start_game", category_select.value);
+  /*
   await sleep(800);
 
   // Loop through all questions
@@ -102,12 +103,12 @@ startgame_btn.addEventListener("click", async function () {
     // Go next
     index++;
   }
+    */
 });
 
 // Display question
 socket.on(
-  "display_question",
-  ({ index, difficulty, category, question, all_answers }) => {
+  "display_question", ({ index, difficulty, category, question, all_answers }) => {
     // Enable slide in animation
     leaderboard_div.classList.remove("slide-in-right");
     leaderboard_div.classList.add("slide-out-left");
