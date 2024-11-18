@@ -1,0 +1,125 @@
+{
+    "results": [
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "As an architect for a large enterprise, you're designing a multi-account strategy. Which AWS service would you use to centrally manage multiple AWS accounts?",
+        "correct_answer": "AWS Organizations",
+        "incorrect_answers": [
+          "AWS Control Tower",
+          "AWS IAM",
+          "AWS Account Manager"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "Your company wants to enforce a consistent security baseline across all AWS accounts. Which Organizations feature would you implement to achieve this?",
+        "correct_answer": "Service Control Policies (SCPs)",
+        "incorrect_answers": [
+          "IAM Policies",
+          "Resource-based Policies",
+          "Trust Policies"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "You need to grant temporary access to an EC2 instance for a developer. Which AWS identity type is most appropriate for this scenario?",
+        "correct_answer": "IAM Role",
+        "incorrect_answers": [
+          "IAM User",
+          "IAM Group",
+          "Root User"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "To limit the maximum permissions an IAM entity can have, regardless of what policies are attached to it, which AWS feature would you use?",
+        "correct_answer": "Permission Boundaries",
+        "incorrect_answers": [
+          "Service Control Policies",
+          "IAM Policy Conditions",
+          "Trust Relationships"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "Your organization wants to centralize logging for all AWS accounts. Which Organizations feature would you use to automatically enable CloudTrail in all accounts?",
+        "correct_answer": "Organizational Trail",
+        "incorrect_answers": [
+          "Account Trail",
+          "Multi-Account Trail",
+          "Centralized Trail"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "You need to grant cross-account access to an S3 bucket. Which type of policy would you primarily use to achieve this?",
+        "correct_answer": "Resource-based Policy",
+        "incorrect_answers": [
+          "Identity-based Policy",
+          "Service Control Policy",
+          "Trust Policy"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A company wants to enforce a consistent tagging strategy across all AWS accounts in their organization. Which AWS service should the architect use?",
+        "correct_answer": "AWS Organizations with Tag Policies",
+        "incorrect_answers": [
+          "AWS Config",
+          "AWS Resource Groups",
+          "AWS Systems Manager"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "An architect is designing a solution to manage access for thousands of employees across multiple AWS accounts. Which AWS service should they use to implement Single Sign-On?",
+        "correct_answer": "AWS IAM Identity Center",
+        "incorrect_answers": [
+          "AWS Cognito",
+          "AWS Directory Service",
+          "AWS IAM"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "A company wants to ensure that no AWS account in their organization can create Internet Gateways. Which AWS Organizations feature should the architect use to implement this restriction?",
+        "correct_answer": "Service Control Policy (SCP)",
+        "incorrect_answers": [
+          "IAM Policy",
+          "VPC Endpoint Policy",
+          "Tag Policy"
+        ]
+      },
+      {
+        "category": "AWS",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "An architect needs to design a solution that allows developers to assume roles in multiple AWS accounts using their corporate credentials. Which AWS service should they use?",
+        "correct_answer": "AWS IAM Identity Center",
+        "incorrect_answers": [
+          "AWS IAM",
+          "AWS Directory Service",
+          "Amazon Cognito"
+        ]
+      }
+    ]
+  }
+  

@@ -1,0 +1,149 @@
+{
+    "results": [
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A company wants to build a serverless web application that allows users to upload images and generate thumbnails asynchronously. Which combination of AWS services would be most suitable for this architecture?",
+        "correct_answer": "Amazon S3, AWS Lambda, and Amazon SQS",
+        "incorrect_answers": [
+          "Amazon EC2, Amazon RDS, and Amazon SQS",
+          "Amazon S3, Amazon ECS, and Amazon SNS",
+          "Amazon DynamoDB, AWS Fargate, and Amazon SQS"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A startup is developing a mobile app that needs to send push notifications to users based on their location. Which AWS services should they use to implement this feature in a serverless manner?",
+        "correct_answer": "Amazon SNS and Amazon Pinpoint",
+        "incorrect_answers": [
+          "Amazon SQS and Amazon SES",
+          "AWS Lambda and Amazon CloudFront",
+          "Amazon API Gateway and AWS Step Functions"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "An e-commerce company wants to implement a serverless architecture for processing orders. They need to ensure that each order is processed exactly once, even if there are network issues or service failures. Which AWS service should they use as the primary event source?",
+        "correct_answer": "Amazon SQS FIFO queue",
+        "incorrect_answers": [
+          "Amazon SNS",
+          "Amazon EventBridge",
+          "Amazon Kinesis Data Streams"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A ticket seller company needs to build a serverless API that can handle sudden spikes in traffic. The API should be able to scale automatically and provide low-latency responses. Which combination of AWS services would be most appropriate?",
+        "correct_answer": "Amazon API Gateway, AWS Lambda and DynamoDB",
+        "incorrect_answers": [
+          "Amazon EC2 and Elastic Load Balancing",
+          "Amazon ECS and Application Load Balancer",
+          "AWS AppSync and Amazon DynamoDB"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "A startup is building a serverless image recognition application. They want to process images in parallel and orchestrate multiple AWS Lambda functions with error handling and retries. Which AWS service should they use to coordinate the workflow?",
+        "correct_answer": "AWS Step Functions",
+        "incorrect_answers": [
+          "Amazon SWF",
+          "AWS Batch",
+          "Amazon EventBridge"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A company wants to implement a serverless architecture for their event-driven microservices. They need a service that can decouple their microservices and handle message routing based on content. Which AWS service should they use?",
+        "correct_answer": "Amazon EventBridge",
+        "incorrect_answers": [
+          "Amazon MQ",
+          "Amazon SNS",
+          "Amazon SQS"
+        ]
+      },
+    {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "A global company is designing a serverless multi-region application that needs to synchronize data across regions with minimal latency. Which combination of AWS services would provide the most efficient solution?",
+        "correct_answer": "Amazon DynamoDB Global Tables, AWS Lambda, and Amazon API Gateway with regional endpoints",
+        "incorrect_answers": [
+          "Amazon Aurora Global Database, AWS Fargate, and Amazon CloudFront",
+          "Amazon S3 Cross-Region Replication, AWS Step Functions, and Elastic Load Balancing",
+          "Amazon ElastiCache Global Datastore, Amazon ECS, and AWS Global Accelerator"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "A startup is building a serverless real-time analytics platform that needs to process and analyze clickstream data from millions of users. Which combination of AWS services would provide the most scalable and cost-effective solution?",
+        "correct_answer": "Amazon Kinesis Data Streams, AWS Lambda, Amazon Kinesis Data Analytics, and Amazon S3",
+        "incorrect_answers": [
+          "Amazon MSK, Amazon EC2, Amazon EMR, and Amazon Redshift",
+          "Amazon SQS, AWS Fargate, Amazon Athena, and Amazon EFS",
+          "AWS IoT Core, Amazon ECS, Amazon QuickSight, and Amazon RDS"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "hard",
+        "question": "A company is building a serverless application that needs to process large volumes of streaming data in real-time and store the results for long-term analysis. Which combination of AWS services would provide the most scalable and cost-effective solution?",
+        "correct_answer": "Amazon Kinesis Data Streams, AWS Lambda, Amazon Kinesis Data Firehose, and Amazon S3",
+        "incorrect_answers": [
+          "Amazon MSK, Amazon EC2, Amazon Redshift, and Amazon EFS",
+          "Amazon SQS, AWS Fargate, Amazon DynamoDB, and Amazon CloudWatch",
+          "AWS IoT Core, Amazon ECS, Amazon RDS, and Amazon QuickSight"
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A retail company wants to implement a serverless architecture for their order processing system. They need to ensure that orders are processed reliably and can handle spikes in traffic during sales. Which combination of AWS services should they use?",
+        "correct_answer": "Amazon SQS for queuing orders, AWS Lambda for processing, and Amazon DynamoDB for storing order data.",
+        "incorrect_answers": [
+          "Amazon EC2 for processing, Amazon RDS for database, and Amazon CloudFront for caching.",
+          "Amazon SNS for notifications, Amazon Kinesis for streaming data, and Amazon S3 for storage.",
+          "AWS Fargate for container management, Amazon Aurora for database, and Amazon API Gateway."
+        ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A company is using AWS Lambda functions that occasionally experience cold starts impacting performance. What can they do to minimize this impact?",
+        "correct_answer": "Enable Provisioned Concurrency for the Lambda functions.",
+        "incorrect_answers": [
+          "Increase the memory allocation for the Lambda functions.",
+          "Use AWS Step Functions to manage execution flow.",
+          "Deploy the functions in multiple regions."
+       ]
+      },
+      {
+        "category": "AWS Serverless",
+        "type": "multiple",
+        "difficulty": "medium",
+        "question": "A company has an application that generates logs stored in an S3 bucket. They want to analyze these logs using SQL queries. What is the most efficient way to achieve this?",
+        "correct_answer": "Use Amazon Athena to query the logs directly from S3.",
+        "incorrect_answers": [
+          "Load the logs into an RDS instance and run queries there.",
+          "Use AWS Glue to transform the logs into a different format.",
+          "Set up an EMR cluster to process the logs."
+        ]
+      }
+    ]
+}
+  
