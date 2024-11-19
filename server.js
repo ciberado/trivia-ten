@@ -87,7 +87,18 @@ io.on("connection", (socket) => {
         });
 
         await sleep(1000*3);
+
+        current_room_scores = get_room_scores(current_room);
+
+        io.in(room).emit("display_leaderboard", {
+          index : i,
+          scores_in_room: current_room_scores,
+        });
+
+        await sleep(1000*3);
+
       }
+
 
     });
 
