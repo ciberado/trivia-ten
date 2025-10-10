@@ -67,7 +67,9 @@ function broadcastWaitingRoom(target: Server, room: Room): void {
 function emitScoreboardUpdate(target: Server, room: Room): void {
   const payload = {
     room: room.room_name,
-    players: room.users.map((user) => user.user_name),
+    players: room.users
+      .filter((user) => !user.is_host)
+      .map((user) => user.user_name),
     scores: get_room_scores(room).map((user) => ({
       user_name: user.user_name,
       score: user.score,

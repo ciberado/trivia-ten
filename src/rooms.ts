@@ -61,6 +61,7 @@ export function join_room(
   }
 
   const user: RoomUser = { user_id, user_name, room_name, score: 0 };
+  user.is_host = false;
   current_room.users.push(user);
   roomLogger.info("User joined room", {
     room_name,
@@ -167,7 +168,9 @@ function compare_scores(a: RoomUser, b: RoomUser): number {
 }
 
 export function get_room_scores(current_room: Room): RoomUser[] {
-  return [...current_room.users].sort(compare_scores);
+  return current_room.users
+    .filter((user) => user.user_id !== current_room.host_user_id)
+    .sort(compare_scores);
 }
 
 export function add_score(
