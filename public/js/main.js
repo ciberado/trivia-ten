@@ -435,6 +435,10 @@ function showCreateScreen() {
   createDiv.classList.remove("hidden");
   hostForm.classList.remove("hidden");
   hostPanel.classList.add("hidden");
+  latestHostPlayers = [];
+  quizInProgress = false;
+  syncHostControls();
+  hostPanel.classList.add("hidden");
   hostNameInput.focus();
 }
 
