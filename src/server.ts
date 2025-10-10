@@ -115,6 +115,10 @@ function finishQuiz(
     });
   }
 
+  target.to(room.host_socket_id).emit("progression_highlight", {
+    index: -1,
+  });
+
   target
     .to(room.room_name)
     .except(room.host_socket_id)
@@ -126,7 +130,7 @@ function finishQuiz(
     });
 
   emitScoreboardUpdate(target, room);
-  target.to(room.host_socket_id).emit("quiz_finished", { reason });
+  target.to(room.host_socket_id).emit("quiz_finished", { reason, scores });
   roomGameState.delete(room.room_name);
 }
 
@@ -200,6 +204,11 @@ function handleAnswer(
       user: user.user_name,
       choice_id,
     });
+    target.to(room.host_socket_id).emit("progression_update", {
+      questionIndex: state.currentIndex,
+      userName: user.user_name,
+      correct: false,
+    });
     return;
   }
 
@@ -228,6 +237,11 @@ function handleAnswer(
     user: user.user_name,
     choice_id,
     score_to_add,
+  });
+  target.to(room.host_socket_id).emit("progression_update", {
+    questionIndex: state.currentIndex,
+    userName: user.user_name,
+    correct: true,
   });
   emitScoreboardUpdate(target, room);
 }
@@ -282,6 +296,10 @@ async function runQuiz(
       room: room.room_name,
       index,
       difficulty: nextQuestion.difficulty,
+    });
+
+    target.to(room.host_socket_id).emit("progression_highlight", {
+      index,
     });
 
     target
@@ -412,7 +430,7 @@ io.on("connection", (socket: Socket) => {
             return;
           }
 
-          const activePlayers = get_room_scores(current_room);
+          const activePlayers = current_room.users.filter((user) => !user.is_host);
           if (activePlayers.length === 0) {
             socketLog.warn("Start game rejected: no players", {
               room: current_room.room_name,
@@ -424,10 +442,14 @@ io.on("connection", (socket: Socket) => {
           }
 
           const state = initializeQuizState(current_room);
-          socket.emit("quiz_started");
-
           reset_room_scores(current_room);
           emitScoreboardUpdate(io, current_room);
+
+          const playerNames = activePlayers.map((player) => player.user_name);
+          socket.emit("quiz_started", {
+            players: playerNames,
+            questionCount: 10,
+          });
 
           try {
             await runQuiz(io, current_room, category_selected);

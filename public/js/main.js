@@ -57,6 +57,13 @@ const leaderboardDiv = document.querySelector(".leaderboard");
 const leaderboardText = document.querySelector(".leaderboard__text");
 const leaderboardBody = document.querySelector(".leaderboard__tablebody");
 
+const hostProgressionHead = document.getElementById("host_progression_head");
+const hostProgressionBody = document.getElementById("host_progression_body");
+
+const PROGRESSION_PENDING_SYMBOL = "–";
+const PROGRESSION_CORRECT_SYMBOL = "✓";
+const PROGRESSION_INCORRECT_SYMBOL = "✗";
+
 // Sounds
 const logClientEvent = (label, detail = {}) => {
   const timestamp = new Date().toISOString();
@@ -76,6 +83,7 @@ const wrongSound = loadSound("../sounds/incorrect.wav");
 
 let quizInProgress = false;
 let latestHostPlayers = [];
+let progressionState = createEmptyProgressionState();
 
 document.addEventListener("click", (event) => {
   const target = event.target;
@@ -169,6 +177,8 @@ socket.on("room_created", ({ room: roomName }) => {
   hostPanel.classList.remove("hidden");
   hostRoomIdText.textContent = roomName;
   hostPlayersText.textContent = "Waiting for players…";
+  clearProgressionTable();
+  highlightProgressionColumn(-1);
 });
 
 socket.on("room_joined", ({ room: roomName }) => {
@@ -441,9 +451,9 @@ function showCreateScreen() {
   joinDiv.classList.add("hidden");
   createDiv.classList.remove("hidden");
   hostForm.classList.remove("hidden");
-  hostPanel.classList.add("hidden");
   latestHostPlayers = [];
   quizInProgress = false;
+  clearProgressionTable();
   syncHostControls();
   hostPanel.classList.add("hidden");
   hostNameInput.focus();
@@ -573,10 +583,137 @@ function syncHostControls() {
   }
 }
 
-socket.on("quiz_started", () => {
-  logClientEvent("quiz_started received");
+function createEmptyProgressionState() {
+  return {
+    players: [],
+    questionCount: 0,
+    headerCells: [],
+    cellMap: new Map(),
+  };
+}
+
+function clearProgressionTable() {
+  if (hostProgressionHead) {
+    hostProgressionHead.innerHTML = "";
+  }
+  if (hostProgressionBody) {
+    hostProgressionBody.innerHTML = "";
+  }
+  progressionState = createEmptyProgressionState();
+}
+
+function resetProgressionTable(players, questionCount) {
+  clearProgressionTable();
+
+  if (!hostProgressionHead || !hostProgressionBody) {
+    return;
+  }
+
+  const effectivePlayers = Array.isArray(players) ? players : [];
+  const effectiveQuestionCount = Number.isFinite(questionCount)
+    ? Math.max(0, questionCount)
+    : 0;
+
+  if (effectivePlayers.length === 0 || effectiveQuestionCount === 0) {
+    return;
+  }
+
+  const headRow = document.createElement("tr");
+  const playerHeader = document.createElement("th");
+  playerHeader.textContent = "Player";
+  playerHeader.scope = "col";
+  headRow.appendChild(playerHeader);
+
+  const headerCells = [];
+  for (let i = 0; i < effectiveQuestionCount; i += 1) {
+    const th = document.createElement("th");
+    th.textContent = `Q${i + 1}`;
+    th.dataset.index = String(i);
+    headRow.appendChild(th);
+    headerCells.push(th);
+  }
+
+  hostProgressionHead.appendChild(headRow);
+
+  progressionState.players = [...effectivePlayers];
+  progressionState.questionCount = effectiveQuestionCount;
+  progressionState.headerCells = headerCells;
+  progressionState.cellMap = new Map();
+
+  effectivePlayers.forEach((player) => {
+    appendProgressionRow(player);
+  });
+}
+
+function appendProgressionRow(player, explicitQuestionCount) {
+  if (!hostProgressionBody) {
+    return [];
+  }
+
+  if (progressionState.cellMap.has(player)) {
+    return progressionState.cellMap.get(player) ?? [];
+  }
+
+  const questionCount = explicitQuestionCount ?? progressionState.questionCount || 10;
+
+  const row = document.createElement("tr");
+  const nameCell = document.createElement("th");
+  nameCell.scope = "row";
+  nameCell.textContent = player;
+  row.appendChild(nameCell);
+
+  const cells = [];
+  for (let i = 0; i < questionCount; i += 1) {
+    const td = document.createElement("td");
+    td.classList.add("progression__cell--pending");
+    td.textContent = PROGRESSION_PENDING_SYMBOL;
+    row.appendChild(td);
+    cells.push(td);
+  }
+
+  hostProgressionBody.appendChild(row);
+  progressionState.cellMap.set(player, cells);
+  return cells;
+}
+
+function highlightProgressionColumn(index) {
+  progressionState.headerCells.forEach((cell, cellIndex) => {
+    cell.classList.toggle("progression__header--active", cellIndex === index);
+  });
+}
+
+function updateProgressionCell(player, questionIndex, correct) {
+  if (typeof questionIndex !== "number" || questionIndex < 0) {
+    return;
+  }
+
+  const targetCells = appendProgressionRow(player);
+  const cell = targetCells[questionIndex];
+  if (!cell) {
+    return;
+  }
+
+  cell.classList.remove(
+    "progression__cell--pending",
+    "progression__cell--correct",
+    "progression__cell--incorrect"
+  );
+
+  if (correct) {
+    cell.classList.add("progression__cell--correct");
+    cell.textContent = PROGRESSION_CORRECT_SYMBOL;
+  } else {
+    cell.classList.add("progression__cell--incorrect");
+    cell.textContent = PROGRESSION_INCORRECT_SYMBOL;
+  }
+}
+
+socket.on("quiz_started", ({ players = [], questionCount = 10 } = {}) => {
+  logClientEvent("quiz_started received", { players, questionCount });
   if (role === "host") {
     quizInProgress = true;
+    resetProgressionTable(players, questionCount);
+    highlightProgressionColumn(-1);
     syncHostControls();
   }
 });
@@ -586,6 +723,25 @@ socket.on("quiz_finished", ({ reason }) => {
   quizInProgress = false;
   if (role === "host") {
     syncHostControls();
+    highlightProgressionColumn(-1);
+  }
+});
+
+socket.on("progression_highlight", ({ index }) => {
+  logClientEvent("progression_highlight received", { index });
+  if (role === "host") {
+    highlightProgressionColumn(index);
+  }
+});
+
+socket.on("progression_update", ({ questionIndex, userName, correct }) => {
+  logClientEvent("progression_update received", {
+    questionIndex,
+    userName,
+    correct,
+  });
+  if (role === "host") {
+    updateProgressionCell(userName, questionIndex, correct);
   }
 });
 
@@ -600,6 +756,7 @@ function resetHostForm() {
   logClientEvent("State reset: host form cleared");
   latestHostPlayers = [];
   quizInProgress = false;
+  clearProgressionTable();
   syncHostControls();
 }
 
