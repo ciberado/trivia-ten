@@ -654,7 +654,9 @@ function appendProgressionRow(player, explicitQuestionCount) {
     return progressionState.cellMap.get(player) ?? [];
   }
 
-  const questionCount = explicitQuestionCount ?? progressionState.questionCount || 10;
+  const questionCount =
+    explicitQuestionCount ??
+    (progressionState.questionCount ? progressionState.questionCount : 10);
 
   const row = document.createElement("tr");
   const nameCell = document.createElement("th");
