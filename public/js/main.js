@@ -57,6 +57,11 @@ const leaderboardText = document.querySelector(".leaderboard__text");
 const leaderboardBody = document.querySelector(".leaderboard__tablebody");
 
 // Sounds
+const logClientEvent = (label, detail = {}) => {
+  const timestamp = new Date().toISOString();
+  console.info(`[client] ${label}`, { timestamp, ...detail });
+};
+
 const silentSound = { play() {} };
 const loadSound = (path) => {
   if (typeof window !== "undefined" && window.Howl) {
@@ -76,18 +81,21 @@ document.addEventListener("click", (event) => {
 
   if (target.closest("#create_room_cta")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: create_room_cta");
     showCreateScreen();
     return;
   }
 
   if (target.closest("#join_room_cta")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: join_room_cta");
     showJoinScreen();
     return;
   }
 
   if (target.closest("#create_back_btn")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: create_back_btn");
     resetHostForm();
     showLanding();
     return;
@@ -95,6 +103,7 @@ document.addEventListener("click", (event) => {
 
   if (target.closest("#join_back_btn")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: join_back_btn");
     resetPlayerForm();
     showLanding();
     return;
@@ -102,24 +111,28 @@ document.addEventListener("click", (event) => {
 
   if (target.closest("#create_btn")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: create_btn");
     handleCreateRoom();
     return;
   }
 
   if (target.closest("#join_btn")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: join_btn");
     handleJoinRoom();
     return;
   }
 
   if (target.closest("#startgame_btn")) {
     event.preventDefault();
+    logClientEvent("CTA clicked: startgame_btn");
     handleStartGame();
   }
 });
 
 socket.on("room_created", ({ room: roomName }) => {
   if (!pendingHost) {
+    logClientEvent("room_created ignored: no pending host", { roomName });
     return;
   }
 
@@ -127,6 +140,11 @@ socket.on("room_created", ({ room: roomName }) => {
   username = pendingHost.username;
   room = roomName;
   pendingHost = null;
+  logClientEvent("room_created handled", {
+    role,
+    username,
+    room,
+  });
 
   hostForm.classList.add("hidden");
   hostPanel.classList.remove("hidden");
@@ -136,6 +154,7 @@ socket.on("room_created", ({ room: roomName }) => {
 
 socket.on("room_joined", ({ room: roomName }) => {
   if (!pendingPlayer) {
+    logClientEvent("room_joined ignored: no pending player", { roomName });
     return;
   }
 
@@ -143,6 +162,11 @@ socket.on("room_joined", ({ room: roomName }) => {
   username = pendingPlayer.username;
   room = roomName;
   pendingPlayer = null;
+  logClientEvent("room_joined handled", {
+    role,
+    username,
+    room,
+  });
 
   joinDiv.classList.add("hidden");
   waitDiv.classList.remove("hidden");
@@ -150,8 +174,14 @@ socket.on("room_joined", ({ room: roomName }) => {
 
 socket.on("display_wait", ({ room: roomName, users_in_room }) => {
   if (role !== "player" || room !== roomName) {
+    logClientEvent("display_wait skipped", { role, room, roomName });
     return;
   }
+
+  logClientEvent("display_wait handled", {
+    room: roomName,
+    users_in_room,
+  });
 
   roomIdText.textContent = roomName;
   playersText.textContent = users_in_room.length
@@ -161,8 +191,15 @@ socket.on("display_wait", ({ room: roomName, users_in_room }) => {
 
 socket.on("scoreboard_update", ({ room: roomName, players, scores }) => {
   if (role !== "host" || room !== roomName) {
+    logClientEvent("scoreboard_update skipped", { role, room, roomName });
     return;
   }
+
+  logClientEvent("scoreboard_update handled", {
+    room: roomName,
+    players,
+    scores,
+  });
 
   hostRoomIdText.textContent = roomName;
   hostPlayersText.textContent = players.length
@@ -186,8 +223,15 @@ socket.on(
   "display_question",
   ({ index, difficulty, category, question, all_answers }) => {
     if (role !== "player") {
+      logClientEvent("display_question skipped", { role, index });
       return;
     }
+
+    logClientEvent("display_question handled", {
+      index,
+      difficulty,
+      category,
+    });
 
     leaderboardDiv.classList.remove("slide-in-right");
     leaderboardDiv.classList.add("slide-out-left");
@@ -234,8 +278,11 @@ socket.on(
 
 socket.on("display_results", ({ correct_answer }) => {
   if (role !== "player") {
+    logClientEvent("display_results skipped", { role, correct_answer });
     return;
   }
+
+  logClientEvent("display_results handled", { correct_answer });
 
   const selectedChoice = document.querySelector(".selected");
   const answers = document.getElementsByClassName("question__choice");
@@ -255,8 +302,14 @@ socket.on("display_results", ({ correct_answer }) => {
 
 socket.on("display_leaderboard", ({ index, scores_in_room }) => {
   if (role !== "player") {
+    logClientEvent("display_leaderboard skipped", { role, index });
     return;
   }
+
+  logClientEvent("display_leaderboard handled", {
+    index,
+    scores: scores_in_room,
+  });
 
   let message = `Question ${index + 2}`;
   if (index === 8) {
@@ -301,6 +354,7 @@ socket.on("display_leaderboard", ({ index, scores_in_room }) => {
 });
 
 socket.on("room_error", ({ message }) => {
+  logClientEvent("room_error received", { message });
   alert(message);
   pendingHost = null;
   pendingPlayer = null;
@@ -308,20 +362,28 @@ socket.on("room_error", ({ message }) => {
 
 function submit_choice(choice_id) {
   if (role !== "player") {
+    logClientEvent("submit_choice blocked: not player", { role, choice_id });
     return;
   }
 
   const button = document.getElementById(choice_id);
   if (!button || button.disabled) {
+    logClientEvent("submit_choice blocked: invalid button", {
+      choice_id,
+      buttonExists: Boolean(button),
+      disabled: button?.disabled ?? null,
+    });
     return;
   }
 
   button.classList.add("selected");
   disableAnswerButtons();
+  logClientEvent("Emit: user_sent_choice", { choice_id });
   socket.emit("user_sent_choice", choice_id);
 }
 
 function resetAnswerButtons() {
+  logClientEvent("UI helper: resetAnswerButtons");
   for (let i = 0; i < choiceButtons.length; i += 1) {
     choiceButtons[i].disabled = false;
     choiceButtons[i].classList.remove("selected", "incorrect", "correct");
@@ -329,12 +391,14 @@ function resetAnswerButtons() {
 }
 
 function disableAnswerButtons() {
+  logClientEvent("UI helper: disableAnswerButtons");
   for (let i = 0; i < choiceButtons.length; i += 1) {
     choiceButtons[i].disabled = true;
   }
 }
 
 function showLanding() {
+  logClientEvent("UI transition: landing");
   landingDiv.classList.remove("hidden");
   createDiv.classList.add("hidden");
   joinDiv.classList.add("hidden");
@@ -342,9 +406,10 @@ function showLanding() {
 }
 
 function showCreateScreen() {
+  logClientEvent("UI transition: create");
   landingDiv.classList.add("hidden");
-  joinDiv.classList.add("hidden");
   waitDiv.classList.add("hidden");
+  joinDiv.classList.add("hidden");
   createDiv.classList.remove("hidden");
   hostForm.classList.remove("hidden");
   hostPanel.classList.add("hidden");
@@ -352,6 +417,7 @@ function showCreateScreen() {
 }
 
 function showJoinScreen() {
+  logClientEvent("UI transition: join");
   landingDiv.classList.add("hidden");
   createDiv.classList.add("hidden");
   waitDiv.classList.add("hidden");
@@ -364,11 +430,16 @@ function handleCreateRoom() {
   const desiredRoom = hostRoomInput?.value.trim() ?? "";
 
   if (!desiredName || !desiredRoom) {
+    logClientEvent("Validation: create_room missing fields", {
+      desiredName,
+      desiredRoom,
+    });
     alert("Provide both your host name and a room id.");
     return;
   }
 
   pendingHost = { username: desiredName, room: desiredRoom };
+  logClientEvent("Emit: create_room", pendingHost);
   socket.emit("create_room", pendingHost);
 }
 
@@ -377,20 +448,27 @@ function handleJoinRoom() {
   const desiredRoom = joinRoomInput?.value.trim() ?? "";
 
   if (!desiredName || !desiredRoom) {
+    logClientEvent("Validation: join_room missing fields", {
+      desiredName,
+      desiredRoom,
+    });
     alert("Please enter a username and room id to join.");
     return;
   }
 
   pendingPlayer = { username: desiredName, room: desiredRoom };
+  logClientEvent("Emit: join_room", pendingPlayer);
   socket.emit("join_room", pendingPlayer);
 }
 
 function handleStartGame() {
   if (role !== "host") {
+    logClientEvent("Blocked: ask_start_game (not host)", { role });
     return;
   }
 
   const selectedCategory = categorySelect?.value ?? "";
+  logClientEvent("Emit: ask_start_game", { category: selectedCategory });
   socket.emit("ask_start_game", selectedCategory);
 }
 
@@ -402,12 +480,14 @@ function resetHostForm() {
   hostRoomInput.value = "";
   hostLeaderboardBody.innerHTML = "";
   hostPlayersText.textContent = "";
+  logClientEvent("State reset: host form cleared");
 }
 
 function resetPlayerForm() {
   pendingPlayer = null;
   joinNameInput.value = "";
   joinRoomInput.value = "";
+  logClientEvent("State reset: player form cleared");
 }
 
 function capitalise(value) {

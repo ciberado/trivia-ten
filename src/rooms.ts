@@ -1,4 +1,5 @@
 import type { Question, RawQuestion, Room, RoomUser } from "./types";
+import { roomLogger } from "./logger";
 
 const rooms: Room[] = [];
 
@@ -9,6 +10,11 @@ export function create_room(
 ): { user: RoomUser; room: Room } {
   const existing = rooms.find((room) => room.room_name === room_name);
   if (existing) {
+    roomLogger.warn("Attempt to create existing room", {
+      user_id,
+      user_name,
+      room_name,
+    });
     throw new Error("room_exists");
   }
 
@@ -30,6 +36,11 @@ export function create_room(
   };
 
   rooms.push(room);
+  roomLogger.info("Room created", {
+    room_name,
+    host_socket_id: user_id,
+    user_count: room.users.length,
+  });
 
   return { user, room };
 }
@@ -41,11 +52,22 @@ export function join_room(
 ): { user: RoomUser; room: Room } {
   const current_room = rooms.find((room) => room.room_name === room_name);
   if (!current_room) {
+    roomLogger.warn("Join attempt for missing room", {
+      user_id,
+      user_name,
+      room_name,
+    });
     throw new Error("room_not_found");
   }
 
   const user: RoomUser = { user_id, user_name, room_name, score: 0 };
   current_room.users.push(user);
+  roomLogger.info("User joined room", {
+    room_name,
+    user_id,
+    user_name,
+    total_users: current_room.users.length,
+  });
   return { user, room: current_room };
 }
 
@@ -61,6 +83,12 @@ export function remove_user(
     current_room.users.splice(userIndex, 1);
   }
 
+  roomLogger.info("User removed from room", {
+    room_name: current_room.room_name,
+    user_id: current_user.user_id,
+    remaining_users: current_room.users.length,
+  });
+
   const is_host = current_user.user_id === current_room.host_user_id;
   const is_empty = current_room.users.length === 0;
 
@@ -72,6 +100,10 @@ export function remove_user(
     if (roomIndex !== -1) {
       rooms.splice(roomIndex, 1);
     }
+    roomLogger.warn("Room removed", {
+      room_name: current_room.room_name,
+      reason: is_host ? "host_disconnect" : "empty_room",
+    });
     return true;
   }
 
@@ -94,12 +126,20 @@ export function add_ten_questions(
     normalise_question(rawQuestion)
   );
   current_room.index = 0;
+  roomLogger.info("Questions loaded for room", {
+    room_name: current_room.room_name,
+    question_count: current_room.ten_questions.length,
+  });
 }
 
 export function get_a_question(current_room: Room): Question | undefined {
   const question = current_room.ten_questions[current_room.index];
   if (question) {
     current_room.index += 1;
+    roomLogger.debug("Question served", {
+      room_name: current_room.room_name,
+      next_index: current_room.index,
+    });
   }
   return question;
 }
@@ -109,6 +149,10 @@ export function get_last_question(current_room: Room): Question | undefined {
   if (previousIndex < 0) {
     return undefined;
   }
+  roomLogger.debug("Retrieving last question", {
+    room_name: current_room.room_name,
+    index: previousIndex,
+  });
   return current_room.ten_questions[previousIndex];
 }
 
@@ -137,6 +181,12 @@ export function add_score(
 
   if (userIndex !== -1) {
     current_room.users[userIndex].score += score;
+    roomLogger.info("Score updated", {
+      room_name: current_room.room_name,
+      user_id: userid,
+      new_score: current_room.users[userIndex].score,
+      added: score,
+    });
   }
 }
 
