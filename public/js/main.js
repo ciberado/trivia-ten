@@ -57,71 +57,87 @@ const leaderboardText = document.querySelector(".leaderboard__text");
 const leaderboardBody = document.querySelector(".leaderboard__tablebody");
 
 // Sounds
-const correctSound = new this.Howl({
-  src: [`../sounds/correct.ogg`],
-  volume: 0.25,
-});
-const wrongSound = new this.Howl({
-  src: [`../sounds/incorrect.wav`],
-  volume: 0.25,
-});
-
-createCta.addEventListener("click", () => {
-  landingDiv.classList.add("hidden");
-  createDiv.classList.remove("hidden");
-  hostNameInput.focus();
-});
-
-joinCta.addEventListener("click", () => {
-  landingDiv.classList.add("hidden");
-  joinDiv.classList.remove("hidden");
-  joinNameInput.focus();
-});
-
-createBackBtn.addEventListener("click", () => {
-  resetHostForm();
-  createDiv.classList.add("hidden");
-  landingDiv.classList.remove("hidden");
-});
-
-joinBackBtn.addEventListener("click", () => {
-  resetPlayerForm();
-  joinDiv.classList.add("hidden");
-  landingDiv.classList.remove("hidden");
-});
-
-createBtn.addEventListener("click", () => {
-  const desiredName = capitalise(hostNameInput.value.trim());
-  const desiredRoom = hostRoomInput.value.trim();
-
-  if (!desiredName || !desiredRoom) {
-    alert("Provide both your host name and a room id.");
-    return;
+const silentSound = { play() {} };
+const loadSound = (path) => {
+  if (typeof window !== "undefined" && window.Howl) {
+    return new window.Howl({ src: [path], volume: 0.25 });
   }
+  return silentSound;
+};
 
-  pendingHost = { username: desiredName, room: desiredRoom };
-  socket.emit("create_room", pendingHost);
-});
+const correctSound = loadSound("../sounds/correct.ogg");
+const wrongSound = loadSound("../sounds/incorrect.wav");
 
-joinBtn.addEventListener("click", () => {
-  const desiredName = capitalise(joinNameInput.value.trim());
-  const desiredRoom = joinRoomInput.value.trim();
+if (createCta) {
+  createCta.addEventListener("click", () => {
+    landingDiv.classList.add("hidden");
+    createDiv.classList.remove("hidden");
+    hostNameInput.focus();
+  });
+}
 
-  if (!desiredName || !desiredRoom) {
-    alert("Please enter a username and room id to join.");
-    return;
-  }
+if (joinCta) {
+  joinCta.addEventListener("click", () => {
+    landingDiv.classList.add("hidden");
+    joinDiv.classList.remove("hidden");
+    joinNameInput.focus();
+  });
+}
 
-  pendingPlayer = { username: desiredName, room: desiredRoom };
-  socket.emit("join_room", pendingPlayer);
-});
+if (createBackBtn) {
+  createBackBtn.addEventListener("click", () => {
+    resetHostForm();
+    createDiv.classList.add("hidden");
+    landingDiv.classList.remove("hidden");
+  });
+}
 
-startGameBtn.addEventListener("click", () => {
-  if (role !== "host") {
-    return;
-  }
-  socket.emit("ask_start_game", categorySelect.value);
-});
+if (joinBackBtn) {
+  joinBackBtn.addEventListener("click", () => {
+    resetPlayerForm();
+    joinDiv.classList.add("hidden");
+    landingDiv.classList.remove("hidden");
+  });
+}
+
+if (createBtn) {
+  createBtn.addEventListener("click", () => {
+    const desiredName = capitalise(hostNameInput.value.trim());
+    const desiredRoom = hostRoomInput.value.trim();
+
+    if (!desiredName || !desiredRoom) {
+      alert("Provide both your host name and a room id.");
+      return;
+    }
+
+    pendingHost = { username: desiredName, room: desiredRoom };
+    socket.emit("create_room", pendingHost);
+  });
+}
+
+if (joinBtn) {
+  joinBtn.addEventListener("click", () => {
+    const desiredName = capitalise(joinNameInput.value.trim());
+    const desiredRoom = joinRoomInput.value.trim();
+
+    if (!desiredName || !desiredRoom) {
+      alert("Please enter a username and room id to join.");
+      return;
+    }
+
+    pendingPlayer = { username: desiredName, room: desiredRoom };
+    socket.emit("join_room", pendingPlayer);
+  });
+}
+
+if (startGameBtn) {
+  startGameBtn.addEventListener("click", () => {
+    if (role !== "host") {
+      return;
+    }
+    socket.emit("ask_start_game", categorySelect.value);
+  });
+}
 
 socket.on("room_created", ({ room: roomName }) => {
   if (!pendingHost) {
@@ -209,17 +225,19 @@ socket.on(
       progressBarInstance.destroy();
     }
 
-    timerWrapper.innerHTML = "";
-    progressBarInstance = new ProgressBar.Line(timerWrapper, {
-      strokeWidth: 1,
-      easing: "linear",
-      duration: QUESTION_TIME_SECONDS * 1000 - 2000,
-      color: "#eebbc3",
-      trailColor: "#586497",
-      trailWidth: 0.5,
-      svgStyle: { width: "100%", height: "100%" },
-    });
-    progressBarInstance.animate(1);
+    if (typeof window !== "undefined" && window.ProgressBar) {
+      timerWrapper.innerHTML = "";
+      progressBarInstance = new window.ProgressBar.Line(timerWrapper, {
+        strokeWidth: 1,
+        easing: "linear",
+        duration: QUESTION_TIME_SECONDS * 1000 - 2000,
+        color: "#eebbc3",
+        trailColor: "#586497",
+        trailWidth: 0.5,
+        svgStyle: { width: "100%", height: "100%" },
+      });
+      progressBarInstance.animate(1);
+    }
 
     numberText.textContent = index + 1;
     difficultyText.textContent =
@@ -267,18 +285,17 @@ socket.on("display_leaderboard", ({ index, scores_in_room }) => {
   }
   if (index === 9 && scores_in_room.length > 0) {
     message = `${scores_in_room[0].user_name} won with ${scores_in_room[0].score} points.`;
-    const leaderboardSound = new this.Howl({
-      src: [`../sounds/leaderboard.wav`],
-      volume: 0.25,
-    });
+    const leaderboardSound = loadSound("../sounds/leaderboard.wav");
     leaderboardSound.play();
-    confetti({
-      particleCount: 250,
-      startVelocity: 30,
-      spread: 360,
-      count: 200,
-      origin: { y: 0.4 },
-    });
+    if (typeof window !== "undefined" && window.confetti) {
+      window.confetti({
+        particleCount: 250,
+        startVelocity: 30,
+        spread: 360,
+        count: 200,
+        origin: { y: 0.4 },
+      });
+    }
   }
 
   leaderboardBody.innerHTML = "";
@@ -359,4 +376,8 @@ function capitalise(value) {
     return value;
   }
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+if (typeof window !== "undefined") {
+  window.submit_choice = submit_choice;
 }
