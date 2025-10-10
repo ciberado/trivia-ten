@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style/css/style.css" />
+    <link rel="stylesheet" href="style/css/overrides.css" />
     <link rel="shortcut icon" href="logo.png" />
     <title>Trivia Ten</title>
   </head>
@@ -124,7 +125,7 @@
       <h1>Trivia Ten</h1>
     </a>
 
-    <div class="home">
+    <div class="landing">
       <h1 class="title">Rules</h1>
       <ul class="paragraph">
         <li>The score you get depends on the difficulty of the question.</li>
@@ -136,11 +137,92 @@
           hidden.
         </li>
       </ul>
+      <div class="landing__actions">
+        <button id="create_room_cta" class="button">Create a room</button>
+        <button id="join_room_cta" class="button button--ghost">
+          Join a room
+        </button>
+      </div>
+    </div>
+
+    <div class="create hidden">
+      <h1 class="title">Create a room</h1>
+      <p class="paragraph">
+        Set a host name, pick a room id, and share it with players. You&rsquo;ll
+        see the scoreboard update in real time.
+      </p>
+      <div id="create_form">
+        <div class="choices">
+          <input
+            required
+            id="host_username_input"
+            name="host_username"
+            class="input"
+            type="text"
+            placeholder="Host name"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            required
+            id="host_room_input"
+            name="host_room"
+            class="input"
+            type="text"
+            placeholder="Room id to share"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="choices choices--actions">
+          <button id="create_back_btn" class="button button--link">Back</button>
+          <button id="create_btn" class="button">Create room</button>
+        </div>
+      </div>
+      <div id="host_panel" class="host hidden">
+        <p class="paragraph">
+          Room id:
+          <span id="host_roomid_text" class="host__highlight"></span>
+        </p>
+        <p class="paragraph">
+          Players:
+          <span id="host_players_text" class="host__highlight"></span>
+        </p>
+        <div class="choices host__controls">
+          <select id="category_select" class="select">
+            <option value="aws-physical-presence">AWS: Physical presence</option>
+            <option value="aws-permissions">AWS: Permissions</option>
+            <option value="aws-basic-networking">AWS: Basic networking</option>
+            <option value="aws-s3-efs-fsx">AWS: Basic shared storage</option>
+            <option value="aws-cloudwatch">AWS: CloudWatch</option>
+            <option value="aws-serverless">AWS: Serverless</option>
+          </select>
+          <button id="startgame_btn" class="button">Start</button>
+        </div>
+        <table class="leaderboard__table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Username</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="host_leaderboard_tablebody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="join hidden">
+      <h1 class="title">Join a room</h1>
+      <p class="paragraph">
+        Enter the room id shared by your host. Trivia runs in real time, so keep
+        the window open once you join.
+      </p>
       <div class="choices">
         <input
           required
-          id="username_input"
-          name="username"
+          id="join_username_input"
+          name="join_username"
           class="input"
           type="text"
           placeholder="Choose username"
@@ -149,14 +231,17 @@
         />
         <input
           required
-          id="room_input"
-          name="room"
+          id="join_room_input"
+          name="join_room"
           class="input"
           type="text"
           placeholder="Enter room id"
           autocomplete="off"
           spellcheck="false"
         />
+      </div>
+      <div class="choices choices--actions">
+        <button id="join_back_btn" class="button button--link">Back</button>
         <button id="join_btn" class="button">Join room</button>
       </div>
     </div>
@@ -166,22 +251,10 @@
       <ul class="paragraph">
         <li>Room id is: <span id="roomid_text"></span></li>
         <li>Players already in: <span id="players_text"></span></li>
-        <li id="wait_text">Leader of the room has to start the game.</li>
       </ul>
-      <div id="leader_div" class="choices hidden">
-        <select id="category_select" class="select">
-          <option value="aws-physical-presence">AWS: Physical presence</option>
-          <option value="aws-permissions">AWS: Permissions</option>
-          <option value="aws-basic-networking">AWS: Basic networking</option>
-          <option value="aws-s3-efs-fsx">AWS: Basic shared storage</option>
-          <option value="aws-cloudwatch">AWS: CloudWatch</option>
-          <option value="aws-serverless">AWS: Serverless</option>
-        </select>
-        <button id="startgame_btn" class="button">Start game</button>
-      </div>
     </div>
 
-    <div id="game slide-in-right">
+    <div id="game" class="slide-in-right">
       <div class="question hidden">
         <p class="question__info">
           <span id="difficulty_text"></span> -

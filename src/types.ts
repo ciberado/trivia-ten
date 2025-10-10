@@ -3,6 +3,7 @@ export interface RoomUser {
   user_name: string;
   room_name: string;
   score: number;
+  is_host?: boolean;
 }
 
 export interface RawQuestion {
@@ -20,6 +21,8 @@ export interface Question extends Omit<RawQuestion, "correct_answer"> {
 
 export interface Room {
   room_name: string;
+  host_socket_id: string;
+  host_user_id: string;
   users: RoomUser[];
   ten_questions: Question[];
   index: number;

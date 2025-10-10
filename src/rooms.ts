@@ -2,46 +2,84 @@ import type { Question, RawQuestion, Room, RoomUser } from "./types";
 
 const rooms: Room[] = [];
 
-export function add_user(
+export function create_room(
   user_id: string,
   user_name: string,
   room_name: string
 ): { user: RoomUser; room: Room } {
-  const user: RoomUser = { user_id, user_name, room_name, score: 0 };
-
-  const existingIndex = rooms.findIndex(
-    (roomToFind) => roomToFind.room_name === room_name
-  );
-
-  if (existingIndex >= 0) {
-    rooms[existingIndex].users.push(user);
-    return { user, room: rooms[existingIndex] };
+  const existing = rooms.find((room) => room.room_name === room_name);
+  if (existing) {
+    throw new Error("room_exists");
   }
 
-  const room: Room = { room_name, users: [user], ten_questions: [], index: 0 };
+  const user: RoomUser = {
+    user_id,
+    user_name,
+    room_name,
+    score: 0,
+    is_host: true,
+  };
+
+  const room: Room = {
+    room_name,
+    host_socket_id: user_id,
+    host_user_id: user_id,
+    users: [user],
+    ten_questions: [],
+    index: 0,
+  };
+
   rooms.push(room);
 
   return { user, room };
 }
 
-export function remove_user(current_user: RoomUser, current_room: Room): void {
+export function join_room(
+  user_id: string,
+  user_name: string,
+  room_name: string
+): { user: RoomUser; room: Room } {
+  const current_room = rooms.find((room) => room.room_name === room_name);
+  if (!current_room) {
+    throw new Error("room_not_found");
+  }
+
+  const user: RoomUser = { user_id, user_name, room_name, score: 0 };
+  current_room.users.push(user);
+  return { user, room: current_room };
+}
+
+export function remove_user(
+  current_user: RoomUser,
+  current_room: Room
+): boolean {
   const userIndex = current_room.users.findIndex(
-    (candidate) => candidate.user_name === current_user.user_name
+    (candidate) => candidate.user_id === current_user.user_id
   );
 
   if (userIndex !== -1) {
     current_room.users.splice(userIndex, 1);
   }
 
-  if (get_room_usernames(current_room).length === 0) {
+  const is_host = current_user.user_id === current_room.host_user_id;
+  const is_empty = current_room.users.length === 0;
+
+  if (is_host || is_empty) {
     const roomIndex = rooms.findIndex(
-      (candidate) => candidate.room_name === current_user.room_name
+      (candidate) => candidate.room_name === current_room.room_name
     );
 
     if (roomIndex !== -1) {
       rooms.splice(roomIndex, 1);
     }
+    return true;
   }
+
+  return false;
+}
+
+export function get_room_by_name(room_name: string): Room | undefined {
+  return rooms.find((room) => room.room_name === room_name);
 }
 
 export function get_room_usernames(current_room: Room): string[] {
@@ -85,7 +123,7 @@ function compare_scores(a: RoomUser, b: RoomUser): number {
 }
 
 export function get_room_scores(current_room: Room): RoomUser[] {
-  return current_room.users.sort(compare_scores);
+  return [...current_room.users].sort(compare_scores);
 }
 
 export function add_score(
@@ -104,7 +142,7 @@ export function add_score(
 
 function normalise_question(raw: RawQuestion): Question {
   const answers = [...raw.incorrect_answers, raw.correct_answer];
-  const shuffled = answers.sort(() => Math.random() - 0.5);
+  const shuffled = [...answers].sort(() => Math.random() - 0.5);
   const correctIndex = shuffled.indexOf(raw.correct_answer);
 
   return {

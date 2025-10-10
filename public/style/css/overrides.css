@@ -1,0 +1,104 @@
+.landing__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+@media screen and (min-width: 520px) {
+  .landing__actions {
+    flex-direction: row;
+  }
+}
+
+.button--ghost {
+  background: transparent;
+  color: #eebbc3;
+  border: 1px solid #eebbc3;
+}
+
+.button--ghost:hover {
+  background-color: rgba(238, 187, 195, 0.1);
+}
+
+.button--link {
+  margin-top: 1.5rem;
+  background: transparent;
+  color: #eebbc3;
+  border: 1px solid #eebbc3;
+  border-radius: 100rem;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button--link:hover {
+  background-color: rgba(238, 187, 195, 0.15);
+  color: #ffffff;
+}
+
+.host {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.host__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.host__highlight {
+  font-weight: 600;
+}
+
+.landing__actions .button,
+.create .button,
+.join .button,
+.host__controls .button {
+  position: static;
+  right: auto;
+  margin: 0;
+}
+
+.host__controls .button {
+  flex: 0 0 auto;
+}
+
+.landing__actions .button {
+  width: 100%;
+}
+
+@media screen and (min-width: 520px) {
+  .landing__actions .button {
+    width: auto;
+  }
+}
+
+.create .choices,
+.join .choices {
+  margin-top: 2rem;
+}
+
+.choices--actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.choices--actions .button {
+  flex: 1 1 140px;
+  text-align: center;
+}
+
+.host__controls .select {
+  margin: 0;
+  width: auto;
+  min-width: 18rem;
+  flex: 1 1 18rem;
+}

@@ -5,16 +5,16 @@ import express from "express";
 import { Server, Socket } from "socket.io";
 
 import {
-  add_user,
   add_score,
   add_ten_questions,
+  create_room,
   get_a_question,
-  get_last_question,
   get_room_scores,
   get_room_usernames,
+  join_room,
   remove_user,
 } from "./rooms";
-import type { Question, RawQuestion, RoomUser } from "./types";
+import type { Question, RawQuestion, Room, RoomUser } from "./types";
 
 const app = express();
 const server = http.createServer(app);
@@ -31,154 +31,258 @@ function sleep(timeoutInMs: number): Promise<void> {
   });
 }
 
+interface RoomGameState {
+  currentQuestion?: Question;
+  currentIndex: number;
+  isFirstToAnswer: boolean;
+}
+
+const roomGameState = new Map<string, RoomGameState>();
+
+function broadcastWaitingRoom(target: Server, room: Room): void {
+  target.to(room.room_name).emit("display_wait", {
+    room: room.room_name,
+    users_in_room: get_room_usernames(room),
+  });
+}
+
+function emitScoreboardUpdate(target: Server, room: Room): void {
+  const payload = {
+    room: room.room_name,
+    players: room.users.map((user) => user.user_name),
+    scores: get_room_scores(room).map((user) => ({
+      user_name: user.user_name,
+      score: user.score,
+    })),
+  };
+
+  target.to(room.host_socket_id).emit("scoreboard_update", payload);
+}
+
+function handleAnswer(
+  target: Server,
+  room: Room,
+  user: RoomUser,
+  choice_id: string
+): void {
+  const state = roomGameState.get(room.room_name);
+  if (!state?.currentQuestion) {
+    return;
+  }
+
+  const answerIndex = Number(choice_id);
+  if (Number.isNaN(answerIndex)) {
+    return;
+  }
+
+  if (answerIndex !== state.currentQuestion.correct_answer) {
+    return;
+  }
+
+  let score_to_add = 0;
+
+  if (state.currentQuestion.difficulty === "easy") {
+    score_to_add = 20;
+  } else if (state.currentQuestion.difficulty === "medium") {
+    score_to_add = 30;
+  } else {
+    score_to_add = 40;
+  }
+
+  if (state.isFirstToAnswer) {
+    score_to_add += 10;
+    state.isFirstToAnswer = false;
+  }
+
+  if (state.currentIndex === 9) {
+    score_to_add *= 2;
+  }
+
+  add_score(room, user.user_id, score_to_add);
+  emitScoreboardUpdate(target, room);
+}
+
+async function runQuiz(
+  target: Server,
+  room: Room,
+  category_selected: string
+): Promise<void> {
+  const data = await fs.readFile(
+    path.join(questionsDir, `${category_selected}.json`),
+    "utf-8"
+  );
+  const json = JSON.parse(data) as { results: RawQuestion[] };
+  add_ten_questions(room, json.results);
+
+  for (let index = 0; index < 10; index += 1) {
+    const nextQuestion = get_a_question(room);
+    if (!nextQuestion) {
+      break;
+    }
+
+    roomGameState.set(room.room_name, {
+      currentQuestion: nextQuestion,
+      currentIndex: index,
+      isFirstToAnswer: true,
+    });
+
+    target.to(room.room_name).emit("display_question", {
+      index,
+      difficulty: nextQuestion.difficulty ?? "medium",
+      category: nextQuestion.category ?? "default",
+      question: nextQuestion.question,
+      all_answers: nextQuestion.incorrect_answers,
+    });
+
+    await sleep(18_000);
+
+    target.to(room.room_name).emit("display_results", {
+      correct_answer: nextQuestion.correct_answer,
+    });
+
+    await sleep(3_000);
+
+    const scores = get_room_scores(room);
+
+    target.to(room.room_name).emit("display_leaderboard", {
+      index,
+      scores_in_room: scores,
+    });
+    emitScoreboardUpdate(target, room);
+
+    await sleep(3_000);
+  }
+
+  roomGameState.delete(room.room_name);
+}
+
 io.on("connection", (socket: Socket) => {
   socket.on(
-    "user_joined_room",
-    ({ username, room }: { username: string; room: string }) => {
-      const { room: current_room, user: current_user } = add_user(
-        socket.id,
-        username,
-        room
-      );
-
-      let current_question: Question | undefined;
-      let current_room_scores: RoomUser[] = [];
-      let current_index: number | undefined;
-      let is_first_to_answer: boolean | undefined;
-
-      void socket.join(room);
-
-      io.to(room).emit("display_wait", {
-        room: current_room.room_name,
-        users_in_room: get_room_usernames(current_room),
-      });
-
-      socket.on("disconnect", () => {
-        remove_user(current_user, current_room);
-
-        io.to(room).emit("display_wait", {
-          room: current_room.room_name,
-          users_in_room: get_room_usernames(current_room),
+    "create_room",
+    async ({ username, room }: { username: string; room: string }) => {
+      if (socket.data.room_name) {
+        socket.emit("room_error", {
+          message: "You are already managing a room. Refresh to start over.",
         });
-      });
+        return;
+      }
 
-      socket.on("ask_start_game", async (category_selected: string) => {
-        const data = await fs.readFile(
-          path.join(questionsDir, `${category_selected}.json`),
-          "utf-8"
+      try {
+        const { room: current_room, user: current_user } = create_room(
+          socket.id,
+          username,
+          room
         );
-        const json = JSON.parse(data) as { results: RawQuestion[] };
-        add_ten_questions(current_room, json.results);
 
-        for (let index = 0; index < 10; index += 1) {
-          const nextQuestion = get_a_question(current_room);
-          if (!nextQuestion) {
-            break;
+        socket.data.room_name = current_room.room_name;
+        socket.data.user_id = current_user.user_id;
+        socket.data.role = "host";
+
+        await socket.join(current_room.room_name);
+        socket.emit("room_created", { room: current_room.room_name });
+
+        emitScoreboardUpdate(io, current_room);
+        broadcastWaitingRoom(io, current_room);
+
+        socket.once("disconnect", () => {
+          const roomRemoved = remove_user(current_user, current_room);
+          roomGameState.delete(current_room.room_name);
+          if (!roomRemoved) {
+            broadcastWaitingRoom(io, current_room);
+            emitScoreboardUpdate(io, current_room);
+          }
+        });
+
+        socket.on("ask_start_game", async (category_selected: string) => {
+          try {
+            await runQuiz(io, current_room, category_selected);
+          } catch (error) {
+            socket.emit("room_error", {
+              message: "Unable to start quiz. Please try another category.",
+            });
+          }
+        });
+
+        socket.on("ask_results", () => {
+          const state = roomGameState.get(current_room.room_name);
+          if (!state?.currentQuestion) {
+            return;
           }
 
-          current_question = nextQuestion;
-          current_index = index;
-          is_first_to_answer = true;
-
-          io.to(room).emit("display_question", {
-            index,
-            difficulty: nextQuestion.difficulty ?? "medium",
-            category: nextQuestion.category ?? "default",
-            question: nextQuestion.question,
-            all_answers: nextQuestion.incorrect_answers,
+          io.to(current_room.room_name).emit("display_results", {
+            correct_answer: state.currentQuestion.correct_answer,
           });
-
-          await sleep(18_000);
-
-          io.to(room).emit("display_results", {
-            correct_answer: nextQuestion.correct_answer,
-          });
-
-          await sleep(3_000);
-
-          current_room_scores = get_room_scores(current_room);
-
-          io.to(room).emit("display_leaderboard", {
-            index,
-            scores_in_room: current_room_scores,
-          });
-
-          await sleep(3_000);
-        }
-      });
-
-      socket.on("ask_question", (index: number) => {
-        const nextQuestion = get_a_question(current_room);
-        if (!nextQuestion) {
-          return;
-        }
-
-        current_question = nextQuestion;
-        current_index = index;
-        is_first_to_answer = true;
-
-        io.to(room).emit("display_question", {
-          index,
-          difficulty: nextQuestion.difficulty ?? "medium",
-          category: nextQuestion.category ?? "default",
-          question: nextQuestion.question,
-          all_answers: nextQuestion.incorrect_answers,
         });
-      });
 
-      socket.on("user_sent_choice", (choice_id: string) => {
-        const recentQuestion = get_last_question(current_room);
-        if (!recentQuestion) {
-          return;
+        socket.on("ask_leaderboard", (index: number) => {
+          const scores = get_room_scores(current_room);
+
+          io.to(current_room.room_name).emit("display_leaderboard", {
+            index,
+            scores_in_room: scores,
+          });
+          emitScoreboardUpdate(io, current_room);
+        });
+      } catch (error: unknown) {
+        let message = "Unable to create room.";
+        if (error instanceof Error && error.message === "room_exists") {
+          message = "Room already exists. Choose another id.";
         }
+        socket.emit("room_error", { message });
+      }
+    }
+  );
 
-        const answerIndex = Number(choice_id);
-        if (Number.isNaN(answerIndex)) {
-          return;
-        }
+  socket.on(
+    "join_room",
+    async ({ username, room }: { username: string; room: string }) => {
+      if (socket.data.room_name) {
+        socket.emit("room_error", {
+          message: "You are already in a room. Refresh to join a new one.",
+        });
+        return;
+      }
 
-        if (answerIndex === recentQuestion.correct_answer) {
-          let score_to_add = 0;
+      try {
+        const { room: current_room, user: current_user } = join_room(
+          socket.id,
+          username,
+          room
+        );
 
-          if (recentQuestion.difficulty === "easy") {
-            score_to_add = 20;
-          } else if (recentQuestion.difficulty === "medium") {
-            score_to_add = 30;
+        socket.data.room_name = current_room.room_name;
+        socket.data.user_id = current_user.user_id;
+        socket.data.role = "player";
+
+        await socket.join(current_room.room_name);
+        socket.emit("room_joined", { room: current_room.room_name });
+
+        broadcastWaitingRoom(io, current_room);
+        emitScoreboardUpdate(io, current_room);
+
+        socket.once("disconnect", () => {
+          const roomRemoved = remove_user(current_user, current_room);
+          if (!roomRemoved) {
+            broadcastWaitingRoom(io, current_room);
+            emitScoreboardUpdate(io, current_room);
           } else {
-            score_to_add = 40;
+            roomGameState.delete(current_room.room_name);
           }
-
-          if (is_first_to_answer) {
-            score_to_add += 10;
-            is_first_to_answer = false;
-          }
-
-          if (current_index === 9) {
-            score_to_add *= 2;
-          }
-
-          add_score(current_room, current_user.user_id, score_to_add);
-        }
-      });
-
-      socket.on("ask_results", () => {
-        if (!current_question) {
-          return;
-        }
-
-        io.to(room).emit("display_results", {
-          correct_answer: current_question.correct_answer,
         });
-      });
 
-      socket.on("ask_leaderboard", (index: number) => {
-        current_room_scores = get_room_scores(current_room);
-
-        io.to(room).emit("display_leaderboard", {
-          index,
-          scores_in_room: current_room_scores,
+        socket.on("user_sent_choice", (choice_id: string) => {
+          if (socket.data.role !== "player") {
+            return;
+          }
+          handleAnswer(io, current_room, current_user, choice_id);
         });
-      });
+      } catch (error: unknown) {
+        let message = "Unable to join room.";
+        if (error instanceof Error && error.message === "room_not_found") {
+          message = "Room not found. Check the code and try again.";
+        }
+        socket.emit("room_error", { message });
+      }
     }
   );
 });
