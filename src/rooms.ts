@@ -33,6 +33,7 @@ export function create_room(
     users: [user],
     ten_questions: [],
     index: 0,
+    quiz_active: false,
   };
 
   rooms.push(room);
@@ -60,8 +61,7 @@ export function join_room(
     throw new Error("room_not_found");
   }
 
-  const user: RoomUser = { user_id, user_name, room_name, score: 0 };
-  user.is_host = false;
+  const user: RoomUser = { user_id, user_name, room_name, score: 0, is_host: false };
   current_room.users.push(user);
   roomLogger.info("User joined room", {
     room_name,

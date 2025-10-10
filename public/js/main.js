@@ -32,6 +32,7 @@ const hostLeaderboardBody = document.getElementById(
 );
 const categorySelect = document.getElementById("category_select");
 const startGameBtn = document.getElementById("startgame_btn");
+const endGameBtn = document.getElementById("endgame_btn");
 
 // Player join form
 const joinNameInput = document.getElementById("join_username_input");
@@ -72,6 +73,9 @@ const loadSound = (path) => {
 
 const correctSound = loadSound("../sounds/correct.ogg");
 const wrongSound = loadSound("../sounds/incorrect.wav");
+
+let quizInProgress = false;
+let latestHostPlayers = [];
 
 document.addEventListener("click", (event) => {
   const target = event.target;
@@ -123,10 +127,18 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (target.closest("#endgame_btn")) {
+    event.preventDefault();
+    logClientEvent("CTA clicked: endgame_btn");
+    handleEndGame();
+    return;
+  }
+
   if (target.closest("#startgame_btn")) {
     event.preventDefault();
     logClientEvent("CTA clicked: startgame_btn");
     handleStartGame();
+    return;
   }
 });
 
@@ -206,6 +218,9 @@ socket.on("scoreboard_update", ({ room: roomName, players, scores }) => {
     ? players.join(", ")
     : "Waiting for players…";
   hostLeaderboardBody.innerHTML = "";
+
+  latestHostPlayers = players;
+  syncHostControls();
 
   scores.forEach((entry, index) => {
     const template = `
@@ -300,7 +315,7 @@ socket.on("display_results", ({ correct_answer }) => {
   }
 });
 
-socket.on("display_leaderboard", ({ index, scores_in_room }) => {
+function renderLeaderboardView({ index, scores_in_room, final, message }) {
   if (role !== "player") {
     logClientEvent("display_leaderboard skipped", { role, index });
     return;
@@ -309,29 +324,34 @@ socket.on("display_leaderboard", ({ index, scores_in_room }) => {
   logClientEvent("display_leaderboard handled", {
     index,
     scores: scores_in_room,
+    final,
   });
 
-  let message = `Question ${index + 2}`;
-  if (index === 8) {
-    message = "Last question! Double points";
-  }
-  if (index === 9 && scores_in_room.length > 0) {
-    message = `${scores_in_room[0].user_name} won with ${scores_in_room[0].score} points.`;
-    const leaderboardSound = loadSound("../sounds/leaderboard.wav");
-    leaderboardSound.play();
-    if (typeof window !== "undefined" && window.confetti) {
-      window.confetti({
-        particleCount: 250,
-        startVelocity: 30,
-        spread: 360,
-        count: 200,
-        origin: { y: 0.4 },
-      });
+  const isFinal = Boolean(final);
+  let messageText = message ?? `Question ${index + 2}`;
+
+  if (!isFinal) {
+    if (index === 8) {
+      messageText = "Last question! Double points";
+    }
+    if (index === 9 && scores_in_room.length > 0) {
+      messageText = `${scores_in_room[0].user_name} won with ${scores_in_room[0].score} points.`;
+      const leaderboardSound = loadSound("../sounds/leaderboard.wav");
+      leaderboardSound.play();
+      if (typeof window !== "undefined" && window.confetti) {
+        window.confetti({
+          particleCount: 250,
+          startVelocity: 30,
+          spread: 360,
+          count: 200,
+          origin: { y: 0.4 },
+        });
+      }
     }
   }
 
   leaderboardBody.innerHTML = "";
-  leaderboardText.textContent = message;
+  leaderboardText.textContent = messageText;
 
   scores_in_room.forEach((entry, position) => {
     const template = `
@@ -351,7 +371,9 @@ socket.on("display_leaderboard", ({ index, scores_in_room }) => {
 
   leaderboardDiv.classList.remove("hidden");
   questionDiv.classList.add("hidden");
-});
+}
+
+socket.on("display_leaderboard", renderLeaderboardView);
 
 socket.on("room_error", ({ message }) => {
   logClientEvent("room_error received", { message });
@@ -467,10 +489,75 @@ function handleStartGame() {
     return;
   }
 
+  if (quizInProgress) {
+    logClientEvent("Blocked: ask_start_game while running", {});
+    return;
+  }
+
+  if (latestHostPlayers.length === 0) {
+    alert("Please wait for at least one player before starting the quiz.");
+    return;
+  }
+
   const selectedCategory = categorySelect?.value ?? "";
   logClientEvent("Emit: ask_start_game", { category: selectedCategory });
   socket.emit("ask_start_game", selectedCategory);
 }
+
+function handleEndGame() {
+  if (role !== "host") {
+    logClientEvent("Blocked: ask_end_game (not host)", { role });
+    return;
+  }
+
+  if (!quizInProgress) {
+    logClientEvent("Blocked: ask_end_game while idle", {});
+    return;
+  }
+
+  logClientEvent("Emit: ask_end_game");
+  socket.emit("ask_end_game");
+}
+
+function syncHostControls() {
+  if (role !== "host") {
+    return;
+  }
+
+  if (!startGameBtn || !endGameBtn) {
+    return;
+  }
+
+  const hasPlayers = latestHostPlayers.length > 0;
+
+  if (quizInProgress) {
+    startGameBtn.classList.add("hidden");
+    endGameBtn.classList.remove("hidden");
+  } else {
+    endGameBtn.classList.add("hidden");
+    if (hasPlayers) {
+      startGameBtn.classList.remove("hidden");
+    } else {
+      startGameBtn.classList.add("hidden");
+    }
+  }
+}
+
+socket.on("quiz_started", () => {
+  logClientEvent("quiz_started received");
+  if (role === "host") {
+    quizInProgress = true;
+    syncHostControls();
+  }
+});
+
+socket.on("quiz_finished", ({ reason }) => {
+  logClientEvent("quiz_finished received", { reason });
+  quizInProgress = false;
+  if (role === "host") {
+    syncHostControls();
+  }
+});
 
 function resetHostForm() {
   pendingHost = null;
@@ -481,6 +568,9 @@ function resetHostForm() {
   hostLeaderboardBody.innerHTML = "";
   hostPlayersText.textContent = "";
   logClientEvent("State reset: host form cleared");
+  latestHostPlayers = [];
+  quizInProgress = false;
+  syncHostControls();
 }
 
 function resetPlayerForm() {

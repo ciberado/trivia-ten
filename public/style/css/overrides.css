@@ -37,6 +37,15 @@
   color: #ffffff;
 }
 
+.button--danger {
+  background-color: #ff6b6b;
+  color: #121629;
+}
+
+.button--danger:hover {
+  background-color: #ff8787;
+}
+
 .host {
   margin-top: 2.5rem;
   display: flex;

@@ -26,4 +26,5 @@ export interface Room {
   users: RoomUser[];
   ten_questions: Question[];
   index: number;
+  quiz_active: boolean;
 }

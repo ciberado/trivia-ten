@@ -49,9 +49,85 @@ interface RoomGameState {
   currentQuestion?: Question;
   currentIndex: number;
   isFirstToAnswer: boolean;
+  cancelled: boolean;
+  running: boolean;
+  finished: boolean;
 }
 
 const roomGameState = new Map<string, RoomGameState>();
+
+function initializeQuizState(room: Room): RoomGameState {
+  const existing = roomGameState.get(room.room_name);
+  const state: RoomGameState = existing ?? {
+    currentQuestion: undefined,
+    currentIndex: 0,
+    isFirstToAnswer: false,
+    cancelled: false,
+    running: false,
+    finished: false,
+  };
+  state.currentQuestion = undefined;
+  state.currentIndex = 0;
+  state.isFirstToAnswer = false;
+  state.cancelled = false;
+  state.running = true;
+  state.finished = false;
+  roomGameState.set(room.room_name, state);
+  room.quiz_active = true;
+  return state;
+}
+
+function getQuizState(room: Room): RoomGameState | undefined {
+  return roomGameState.get(room.room_name);
+}
+
+function finishQuiz(
+  target: Server,
+  room: Room,
+  state: RoomGameState,
+  reason: "cancelled" | "completed"
+): void {
+  if (state.finished) {
+    return;
+  }
+
+  state.finished = true;
+  state.running = false;
+  state.currentQuestion = undefined;
+  room.quiz_active = false;
+
+  const scores = get_room_scores(room);
+
+  const finalMessage =
+    reason === "cancelled"
+      ? "Quiz ended early. Final scores."
+      : "Final scores";
+
+  if (reason === "cancelled") {
+    roomLogger.warn("Quiz cancelled", {
+      room: room.room_name,
+      question_index: state.currentIndex,
+    });
+  } else {
+    roomLogger.info("Quiz completed", {
+      room: room.room_name,
+    });
+  }
+
+  target
+    .to(room.room_name)
+    .except(room.host_socket_id)
+    .emit("display_leaderboard", {
+      index: state.currentIndex,
+      scores_in_room: scores,
+      final: true,
+      message: finalMessage,
+    });
+
+  emitScoreboardUpdate(target, room);
+  target.to(room.host_socket_id).emit("quiz_finished", { reason });
+  roomGameState.delete(room.room_name);
+}
 
 function broadcastWaitingRoom(target: Server, room: Room): void {
   roomLogger.debug("Broadcasting waiting room update", {
@@ -93,6 +169,14 @@ function handleAnswer(
   const state = roomGameState.get(room.room_name);
   if (!state?.currentQuestion) {
     roomLogger.warn("Handle answer skipped: no current question", {
+      room: room.room_name,
+      user: user.user_name,
+    });
+    return;
+  }
+
+  if (!state.running) {
+    roomLogger.debug("Handle answer skipped: quiz not running", {
       room: room.room_name,
       user: user.user_name,
     });
@@ -152,6 +236,14 @@ async function runQuiz(
   room: Room,
   category_selected: string
 ): Promise<void> {
+  const state = getQuizState(room);
+  if (!state) {
+    roomLogger.error("Attempted to run quiz without initialized state", {
+      room: room.room_name,
+    });
+    return;
+  }
+
   roomLogger.info("Quiz starting", {
     room: room.room_name,
     category_selected,
@@ -164,6 +256,14 @@ async function runQuiz(
   add_ten_questions(room, json.results);
 
   for (let index = 0; index < 10; index += 1) {
+    if (!state.running) {
+      roomLogger.info("Quiz loop exiting early (not running)", {
+        room: room.room_name,
+        index,
+      });
+      break;
+    }
+
     const nextQuestion = get_a_question(room);
     if (!nextQuestion) {
       roomLogger.warn("Quiz aborted: no question available", {
@@ -173,11 +273,9 @@ async function runQuiz(
       break;
     }
 
-    roomGameState.set(room.room_name, {
-      currentQuestion: nextQuestion,
-      currentIndex: index,
-      isFirstToAnswer: true,
-    });
+    state.currentQuestion = nextQuestion;
+    state.currentIndex = index;
+    state.isFirstToAnswer = true;
 
     roomLogger.info("Question dispatched", {
       room: room.room_name,
@@ -185,28 +283,43 @@ async function runQuiz(
       difficulty: nextQuestion.difficulty,
     });
 
-    target.to(room.room_name).emit("display_question", {
-      index,
-      difficulty: nextQuestion.difficulty ?? "medium",
-      category: nextQuestion.category ?? "default",
-      question: nextQuestion.question,
-      all_answers: nextQuestion.incorrect_answers,
-    });
+    target
+      .to(room.room_name)
+      .except(room.host_socket_id)
+      .emit("display_question", {
+        index,
+        difficulty: nextQuestion.difficulty ?? "medium",
+        category: nextQuestion.category ?? "default",
+        question: nextQuestion.question,
+        all_answers: nextQuestion.incorrect_answers,
+      });
 
     await sleep(18_000);
+    if (!state.running) {
+      break;
+    }
 
-    target.to(room.room_name).emit("display_results", {
-      correct_answer: nextQuestion.correct_answer,
-    });
+    target
+      .to(room.room_name)
+      .except(room.host_socket_id)
+      .emit("display_results", {
+        correct_answer: nextQuestion.correct_answer,
+      });
 
     await sleep(3_000);
+    if (!state.running) {
+      break;
+    }
 
     const scores = get_room_scores(room);
 
-    target.to(room.room_name).emit("display_leaderboard", {
-      index,
-      scores_in_room: scores,
-    });
+    target
+      .to(room.room_name)
+      .except(room.host_socket_id)
+      .emit("display_leaderboard", {
+        index,
+        scores_in_room: scores,
+      });
     emitScoreboardUpdate(target, room);
 
     await sleep(3_000);
@@ -215,10 +328,18 @@ async function runQuiz(
       room: room.room_name,
       index,
     });
+
+    if (!state.running) {
+      break;
+    }
   }
 
-  roomGameState.delete(room.room_name);
-  roomLogger.info("Quiz completed", { room: room.room_name });
+  finishQuiz(
+    target,
+    room,
+    state,
+    state.cancelled ? "cancelled" : "completed"
+  );
 }
 
 io.on("connection", (socket: Socket) => {
@@ -265,8 +386,13 @@ io.on("connection", (socket: Socket) => {
           socketLog.info("Host socket disconnected", {
             room: current_room.room_name,
           });
+          const state = getQuizState(current_room);
+          if (state?.running) {
+            state.cancelled = true;
+            finishQuiz(io, current_room, state, "cancelled");
+          }
+
           const roomRemoved = remove_user(current_user, current_room);
-          roomGameState.delete(current_room.room_name);
           if (!roomRemoved) {
             broadcastWaitingRoom(io, current_room);
             emitScoreboardUpdate(io, current_room);
@@ -274,17 +400,61 @@ io.on("connection", (socket: Socket) => {
         });
 
         socket.on("ask_start_game", async (category_selected: string) => {
+          const existingState = getQuizState(current_room);
+          if (existingState?.running) {
+            socketLog.warn("Start game rejected: quiz already running", {
+              room: current_room.room_name,
+            });
+            socket.emit("room_error", {
+              message: "The quiz is already running.",
+            });
+            return;
+          }
+
+          const activePlayers = get_room_scores(current_room);
+          if (activePlayers.length === 0) {
+            socketLog.warn("Start game rejected: no players", {
+              room: current_room.room_name,
+            });
+            socket.emit("room_error", {
+              message: "Invite at least one player before starting the quiz.",
+            });
+            return;
+          }
+
+          const state = initializeQuizState(current_room);
+          socket.emit("quiz_started");
+
           try {
             await runQuiz(io, current_room, category_selected);
           } catch (error) {
-            socketLog.error("Failed to start quiz", {
+            socketLog.error("Failed to run quiz", {
               error,
               room: current_room.room_name,
             });
+            state.cancelled = true;
+            finishQuiz(io, current_room, state, "cancelled");
             socket.emit("room_error", {
               message: "Unable to start quiz. Please try another category.",
             });
           }
+        });
+
+        socket.on("ask_end_game", () => {
+          const state = getQuizState(current_room);
+          if (!state?.running) {
+            socketLog.warn("End game ignored: quiz not running", {
+              room: current_room.room_name,
+            });
+            socket.emit("quiz_finished", { reason: "not_running" });
+            return;
+          }
+
+          socketLog.info("Host requested quiz termination", {
+            room: current_room.room_name,
+          });
+          state.cancelled = true;
+          finishQuiz(io, current_room, state, "cancelled");
         });
 
         socket.on("ask_results", () => {
@@ -296,18 +466,39 @@ io.on("connection", (socket: Socket) => {
             return;
           }
 
-          io.to(current_room.room_name).emit("display_results", {
-            correct_answer: state.currentQuestion.correct_answer,
-          });
+          if (!state.running) {
+            socketLog.debug("ask_results ignored: quiz not running", {
+              room: current_room.room_name,
+            });
+            return;
+          }
+
+          io
+            .to(current_room.room_name)
+            .except(current_room.host_socket_id)
+            .emit("display_results", {
+              correct_answer: state.currentQuestion.correct_answer,
+            });
         });
 
         socket.on("ask_leaderboard", (index: number) => {
+          const state = roomGameState.get(current_room.room_name);
+          if (state && !state.running) {
+            socketLog.debug("ask_leaderboard ignored: quiz not running", {
+              room: current_room.room_name,
+            });
+            return;
+          }
+
           const scores = get_room_scores(current_room);
 
-          io.to(current_room.room_name).emit("display_leaderboard", {
-            index,
-            scores_in_room: scores,
-          });
+          io
+            .to(current_room.room_name)
+            .except(current_room.host_socket_id)
+            .emit("display_leaderboard", {
+              index,
+              scores_in_room: scores,
+            });
           emitScoreboardUpdate(io, current_room);
         });
       } catch (error: unknown) {
