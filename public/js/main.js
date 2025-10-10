@@ -68,76 +68,55 @@ const loadSound = (path) => {
 const correctSound = loadSound("../sounds/correct.ogg");
 const wrongSound = loadSound("../sounds/incorrect.wav");
 
-if (createCta) {
-  createCta.addEventListener("click", () => {
-    landingDiv.classList.add("hidden");
-    createDiv.classList.remove("hidden");
-    hostNameInput.focus();
-  });
-}
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
 
-if (joinCta) {
-  joinCta.addEventListener("click", () => {
-    landingDiv.classList.add("hidden");
-    joinDiv.classList.remove("hidden");
-    joinNameInput.focus();
-  });
-}
+  if (target.closest("#create_room_cta")) {
+    event.preventDefault();
+    showCreateScreen();
+    return;
+  }
 
-if (createBackBtn) {
-  createBackBtn.addEventListener("click", () => {
+  if (target.closest("#join_room_cta")) {
+    event.preventDefault();
+    showJoinScreen();
+    return;
+  }
+
+  if (target.closest("#create_back_btn")) {
+    event.preventDefault();
     resetHostForm();
-    createDiv.classList.add("hidden");
-    landingDiv.classList.remove("hidden");
-  });
-}
+    showLanding();
+    return;
+  }
 
-if (joinBackBtn) {
-  joinBackBtn.addEventListener("click", () => {
+  if (target.closest("#join_back_btn")) {
+    event.preventDefault();
     resetPlayerForm();
-    joinDiv.classList.add("hidden");
-    landingDiv.classList.remove("hidden");
-  });
-}
+    showLanding();
+    return;
+  }
 
-if (createBtn) {
-  createBtn.addEventListener("click", () => {
-    const desiredName = capitalise(hostNameInput.value.trim());
-    const desiredRoom = hostRoomInput.value.trim();
+  if (target.closest("#create_btn")) {
+    event.preventDefault();
+    handleCreateRoom();
+    return;
+  }
 
-    if (!desiredName || !desiredRoom) {
-      alert("Provide both your host name and a room id.");
-      return;
-    }
+  if (target.closest("#join_btn")) {
+    event.preventDefault();
+    handleJoinRoom();
+    return;
+  }
 
-    pendingHost = { username: desiredName, room: desiredRoom };
-    socket.emit("create_room", pendingHost);
-  });
-}
-
-if (joinBtn) {
-  joinBtn.addEventListener("click", () => {
-    const desiredName = capitalise(joinNameInput.value.trim());
-    const desiredRoom = joinRoomInput.value.trim();
-
-    if (!desiredName || !desiredRoom) {
-      alert("Please enter a username and room id to join.");
-      return;
-    }
-
-    pendingPlayer = { username: desiredName, room: desiredRoom };
-    socket.emit("join_room", pendingPlayer);
-  });
-}
-
-if (startGameBtn) {
-  startGameBtn.addEventListener("click", () => {
-    if (role !== "host") {
-      return;
-    }
-    socket.emit("ask_start_game", categorySelect.value);
-  });
-}
+  if (target.closest("#startgame_btn")) {
+    event.preventDefault();
+    handleStartGame();
+  }
+});
 
 socket.on("room_created", ({ room: roomName }) => {
   if (!pendingHost) {
@@ -353,6 +332,66 @@ function disableAnswerButtons() {
   for (let i = 0; i < choiceButtons.length; i += 1) {
     choiceButtons[i].disabled = true;
   }
+}
+
+function showLanding() {
+  landingDiv.classList.remove("hidden");
+  createDiv.classList.add("hidden");
+  joinDiv.classList.add("hidden");
+  waitDiv.classList.add("hidden");
+}
+
+function showCreateScreen() {
+  landingDiv.classList.add("hidden");
+  joinDiv.classList.add("hidden");
+  waitDiv.classList.add("hidden");
+  createDiv.classList.remove("hidden");
+  hostForm.classList.remove("hidden");
+  hostPanel.classList.add("hidden");
+  hostNameInput.focus();
+}
+
+function showJoinScreen() {
+  landingDiv.classList.add("hidden");
+  createDiv.classList.add("hidden");
+  waitDiv.classList.add("hidden");
+  joinDiv.classList.remove("hidden");
+  joinNameInput.focus();
+}
+
+function handleCreateRoom() {
+  const desiredName = capitalise(hostNameInput?.value.trim() ?? "");
+  const desiredRoom = hostRoomInput?.value.trim() ?? "";
+
+  if (!desiredName || !desiredRoom) {
+    alert("Provide both your host name and a room id.");
+    return;
+  }
+
+  pendingHost = { username: desiredName, room: desiredRoom };
+  socket.emit("create_room", pendingHost);
+}
+
+function handleJoinRoom() {
+  const desiredName = capitalise(joinNameInput?.value.trim() ?? "");
+  const desiredRoom = joinRoomInput?.value.trim() ?? "";
+
+  if (!desiredName || !desiredRoom) {
+    alert("Please enter a username and room id to join.");
+    return;
+  }
+
+  pendingPlayer = { username: desiredName, room: desiredRoom };
+  socket.emit("join_room", pendingPlayer);
+}
+
+function handleStartGame() {
+  if (role !== "host") {
+    return;
+  }
+
+  const selectedCategory = categorySelect?.value ?? "";
+  socket.emit("ask_start_game", selectedCategory);
 }
 
 function resetHostForm() {
