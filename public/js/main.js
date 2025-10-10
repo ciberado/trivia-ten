@@ -134,6 +134,13 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  if (target.closest("#host_back_btn")) {
+    event.preventDefault();
+    logClientEvent("CTA clicked: host_back_btn");
+    handleHostBack();
+    return;
+  }
+
   if (target.closest("#startgame_btn")) {
     event.preventDefault();
     logClientEvent("CTA clicked: startgame_btn");
@@ -521,6 +528,25 @@ function handleEndGame() {
 
   logClientEvent("Emit: ask_end_game");
   socket.emit("ask_end_game");
+}
+
+function handleHostBack() {
+  if (role !== "host") {
+    return;
+  }
+
+  if (quizInProgress) {
+    const confirmEnd = window.confirm(
+      "The quiz is currently running. Do you want to end it and return?"
+    );
+    if (!confirmEnd) {
+      return;
+    }
+    handleEndGame();
+  }
+
+  resetHostForm();
+  showLanding();
 }
 
 function syncHostControls() {
