@@ -10,12 +10,12 @@
   "author": "Jeusto - Arhun Saday",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
-    "node-fetch": "^2.6.1",
-    "progressbar.js": "^1.1.0",
-    "socket.io": "^4.6.1"
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "progressbar.js": "^1.1.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^3.1.10"
   }
 }
