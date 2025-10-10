@@ -61,6 +61,21 @@ export function join_room(
     throw new Error("room_not_found");
   }
 
+  const existingHost = current_room.users.find(
+    (member) => member.is_host && member.user_name === user_name
+  );
+  if (existingHost) {
+    roomLogger.info("Host reclaiming control", {
+      room_name,
+      previous_socket: existingHost.user_id,
+      new_socket: user_id,
+      user_name,
+    });
+    existingHost.user_id = user_id;
+    current_room.host_socket_id = user_id;
+    return { user: existingHost, room: current_room };
+  }
+
   const user: RoomUser = { user_id, user_name, room_name, score: 0, is_host: false };
   current_room.users.push(user);
   roomLogger.info("User joined room", {
