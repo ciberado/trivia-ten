@@ -13,6 +13,7 @@ import {
   get_room_usernames,
   join_room,
   remove_user,
+  reset_room_scores,
 } from "./rooms";
 import type { Question, RawQuestion, Room, RoomUser } from "./types";
 import { logger, socketLogger, roomLogger } from "./logger";
@@ -424,6 +425,9 @@ io.on("connection", (socket: Socket) => {
 
           const state = initializeQuizState(current_room);
           socket.emit("quiz_started");
+
+          reset_room_scores(current_room);
+          emitScoreboardUpdate(io, current_room);
 
           try {
             await runQuiz(io, current_room, category_selected);

@@ -193,6 +193,16 @@ export function add_score(
   }
 }
 
+export function reset_room_scores(current_room: Room): void {
+  current_room.users.forEach((user) => {
+    user.score = 0;
+  });
+  roomLogger.info("Room scores reset", {
+    room_name: current_room.room_name,
+    user_count: current_room.users.length,
+  });
+}
+
 function normalise_question(raw: RawQuestion): Question {
   const answers = [...raw.incorrect_answers, raw.correct_answer];
   const shuffled = [...answers].sort(() => Math.random() - 0.5);
