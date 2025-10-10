@@ -5,6 +5,10 @@
   margin-top: 2.5rem;
 }
 
+.hidden {
+  display: none !important;
+}
+
 @media screen and (min-width: 520px) {
   .landing__actions {
     flex-direction: row;
