@@ -47,25 +47,7 @@ sequenceDiagram
 ## Player Experience
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant Player UI
-    participant Server
-    participant Host
 
-    Player UI->>Server: join_room { username, room }
-    Server-->>Player UI: room_joined { room }
-    loop Lobby
-        Server-->>Player UI: display_wait
-    end
-    Note right of Player UI: Host triggers ask_start_game
-    loop For each question
-        Server-->>Player UI: display_question
-        Player UI->>Server: user_sent_choice { choice }
-        Server-->>Player UI: display_results
-        Server-->>Player UI: display_leaderboard
-    end
-    Server-->>Player UI: display_leaderboard (final)
 ```
 
 ### Narrative

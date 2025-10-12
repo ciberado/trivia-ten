@@ -85,6 +85,47 @@ let quizInProgress = false;
 let latestHostPlayers = [];
 let progressionState = createEmptyProgressionState();
 
+const STORAGE_KEYS = {
+  hostName: "triviaTen.hostName",
+  hostRoom: "triviaTen.hostRoom",
+  playerName: "triviaTen.playerName",
+  playerRoom: "triviaTen.playerRoom",
+};
+
+function getStoredValue(key) {
+  try {
+    return window.localStorage.getItem(key) ?? "";
+  } catch (error) {
+    logClientEvent("localStorage read failed", { key, error });
+    return "";
+  }
+}
+
+function setStoredValue(key, value) {
+  try {
+    if (value) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch (error) {
+    logClientEvent("localStorage write failed", { key, error });
+  }
+}
+
+function hydrateStoredInputs() {
+  if (hostNameInput) {
+    hostNameInput.value = getStoredValue(STORAGE_KEYS.hostName);
+  }
+  if (hostRoomInput) {
+    hostRoomInput.value = getStoredValue(STORAGE_KEYS.hostRoom);
+  }
+  if (joinNameInput) {
+    joinNameInput.value = getStoredValue(STORAGE_KEYS.playerName);
+  }
+  if (joinRoomInput) {
+    joinRoomInput.value = getStoredValue(STORAGE_KEYS.playerRoom);
+  }
+}
+
 document.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) {
@@ -156,6 +197,8 @@ document.addEventListener("click", (event) => {
     return;
   }
 });
+
+hydrateStoredInputs();
 
 socket.on("room_created", ({ room: roomName }) => {
   if (!pendingHost) {
@@ -483,6 +526,8 @@ function handleCreateRoom() {
 
   pendingHost = { username: desiredName, room: desiredRoom };
   logClientEvent("Emit: create_room", pendingHost);
+  setStoredValue(STORAGE_KEYS.hostName, desiredName);
+  setStoredValue(STORAGE_KEYS.hostRoom, desiredRoom);
   socket.emit("create_room", pendingHost);
 }
 
@@ -501,6 +546,8 @@ function handleJoinRoom() {
 
   pendingPlayer = { username: desiredName, room: desiredRoom };
   logClientEvent("Emit: join_room", pendingPlayer);
+  setStoredValue(STORAGE_KEYS.playerName, desiredName);
+  setStoredValue(STORAGE_KEYS.playerRoom, desiredRoom);
   socket.emit("join_room", pendingPlayer);
 }
 
@@ -714,6 +761,10 @@ socket.on("quiz_started", ({ players = [], questionCount = 10 } = {}) => {
   logClientEvent("quiz_started received", { players, questionCount });
   if (role === "host") {
     quizInProgress = true;
+    if (players.length > 0) {
+      setStoredValue(STORAGE_KEYS.hostName, hostNameInput?.value.trim() ?? "");
+      setStoredValue(STORAGE_KEYS.hostRoom, hostRoomInput?.value.trim() ?? "");
+    }
     resetProgressionTable(players, questionCount);
     highlightProgressionColumn(-1);
     syncHostControls();
