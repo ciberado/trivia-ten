@@ -12,6 +12,7 @@
   "author": "Jeusto - Arhun Saday",
   "license": "ISC",
   "dependencies": {
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2",
     "progressbar.js": "^1.1.1",

@@ -17,6 +17,11 @@ import {
 } from "./rooms";
 import type { Question, RawQuestion, Room, RoomUser } from "./types";
 import { logger, socketLogger, roomLogger } from "./logger";
+import {
+  appendQuizReport,
+  AnswerReportRow,
+  GameSummaryRow,
+} from "./reporting";
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +58,13 @@ interface RoomGameState {
   cancelled: boolean;
   running: boolean;
   finished: boolean;
+  questionStartTimestamp?: number;
+  quizName?: string;
+  questionCount?: number;
+  playersAtStart: string[];
+  answerLog: AnswerReportRow[];
+  quizStartedAt: string;
+  hostNameSnapshot: string;
 }
 
 const roomGameState = new Map<string, RoomGameState>();
@@ -66,6 +78,14 @@ function initializeQuizState(room: Room): RoomGameState {
     cancelled: false,
     running: false,
     finished: false,
+    questionStartTimestamp: undefined,
+    quizName: undefined,
+    questionCount: undefined,
+    playersAtStart: [],
+    answerLog: [],
+    quizStartedAt: new Date().toISOString(),
+    hostNameSnapshot:
+      room.users.find((member) => member.is_host)?.user_name ?? "",
   };
   state.currentQuestion = undefined;
   state.currentIndex = 0;
@@ -73,6 +93,16 @@ function initializeQuizState(room: Room): RoomGameState {
   state.cancelled = false;
   state.running = true;
   state.finished = false;
+  state.questionStartTimestamp = undefined;
+  state.quizName = undefined;
+  state.questionCount = undefined;
+  state.playersAtStart = [];
+  state.answerLog = [];
+  state.quizStartedAt = new Date().toISOString();
+  state.hostNameSnapshot =
+    room.users.find((member) => member.is_host)?.user_name ??
+    state.hostNameSnapshot ??
+    "";
   roomGameState.set(room.room_name, state);
   room.quiz_active = true;
   return state;
@@ -130,8 +160,137 @@ function finishQuiz(
     });
 
   emitScoreboardUpdate(target, room);
+
+  if (!state.answerLog) {
+    state.answerLog = [];
+  }
+
+  const summary = buildGameSummary(state, room, scores);
+  appendQuizReport({ answers: state.answerLog, summary }).catch((error) => {
+    logger.error("Failed to record quiz report", {
+      error,
+      room: room.room_name,
+    });
+  });
+
   target.to(room.host_socket_id).emit("quiz_finished", { reason, scores });
   roomGameState.delete(room.room_name);
+}
+
+function recordAnswerLog(
+  state: RoomGameState,
+  room: Room,
+  user: RoomUser,
+  entry: {
+    questionNumber: number;
+    correct: boolean;
+    scoreAwarded: number;
+    totalScore: number;
+    leaderboardPosition: number;
+    timeMs: number;
+    providedAnswerIndex: number;
+    providedAnswer: string;
+    correctAnswer: string;
+    difficulty?: string;
+    category?: string;
+  }
+): void {
+  if (!state.answerLog) {
+    state.answerLog = [];
+  }
+
+  if (!state.playersAtStart) {
+    state.playersAtStart = [];
+  }
+
+  if (!state.playersAtStart.includes(user.user_name)) {
+    state.playersAtStart.push(user.user_name);
+  }
+
+  const hostUser = room.users.find((member) => member.is_host);
+  const playersCount = state.playersAtStart.length;
+
+  const record: AnswerReportRow = {
+    timestamp: new Date().toISOString(),
+    hostName: state.hostNameSnapshot ?? hostUser?.user_name ?? "",
+    roomName: room.room_name,
+    quizName: state.quizName ?? entry.category ?? "",
+    questionCount: state.questionCount ?? room.ten_questions.length,
+    questionNumber: entry.questionNumber,
+    playerName: user.user_name,
+    difficulty: entry.difficulty ?? "unknown",
+    category: entry.category ?? state.quizName ?? "",
+    correctAnswer: entry.correctAnswer,
+    providedAnswer: entry.providedAnswer,
+    providedAnswerIndex: entry.providedAnswerIndex,
+    correct: entry.correct,
+    timeMs: entry.timeMs,
+    scoreAwarded: entry.scoreAwarded,
+    totalScore: entry.totalScore,
+    leaderboardPosition: entry.leaderboardPosition,
+    playersCount,
+  };
+
+  state.answerLog.push(record);
+}
+
+function buildGameSummary(
+  state: RoomGameState,
+  room: Room,
+  finalScores: RoomUser[]
+): GameSummaryRow {
+  const answerLog = state.answerLog ?? [];
+  const questionCount = state.questionCount ?? room.ten_questions.length;
+  const playerSet = new Set(
+    state.playersAtStart && state.playersAtStart.length
+      ? state.playersAtStart
+      : answerLog.map((entry) => entry.playerName)
+  );
+  const playerCount = playerSet.size;
+  const totalAnswers = answerLog.length;
+  const correctAnswers = answerLog.filter((entry) => entry.correct).length;
+  const incorrectAnswers = totalAnswers - correctAnswers;
+  const correctRatio = totalAnswers ? correctAnswers / totalAnswers : 0;
+  const incorrectRatio = totalAnswers ? incorrectAnswers / totalAnswers : 0;
+  const times = answerLog.map((entry) => entry.timeMs);
+  const averageTimeMs = times.length
+    ? times.reduce((sum, value) => sum + value, 0) / times.length
+    : 0;
+  const varianceTimeMs2 = times.length
+    ? times.reduce((sum, value) => sum + Math.pow(value - averageTimeMs, 2), 0) /
+      times.length
+    : 0;
+  const fastestTimeMs = times.length ? Math.min(...times) : 0;
+  const slowestTimeMs = times.length ? Math.max(...times) : 0;
+  const finalScoreTotal = finalScores.reduce((sum, entry) => sum + entry.score, 0);
+  const averageScorePerPlayer = playerCount
+    ? finalScoreTotal / playerCount
+    : 0;
+  const winner = finalScores[0];
+
+  return {
+    timestamp: state.quizStartedAt ?? new Date().toISOString(),
+    hostName:
+      state.hostNameSnapshot ??
+      room.users.find((member) => member.is_host)?.user_name ??
+      "",
+    roomName: room.room_name,
+    quizName: state.quizName ?? "",
+    questionCount,
+    playerCount,
+    totalAnswers,
+    correctAnswers,
+    incorrectAnswers,
+    correctRatio,
+    incorrectRatio,
+    averageTimeMs,
+    varianceTimeMs2,
+    fastestTimeMs,
+    slowestTimeMs,
+    averageScorePerPlayer,
+    winnerName: winner?.user_name,
+    winnerScore: winner?.score,
+  };
 }
 
 function broadcastWaitingRoom(target: Server, room: Room): void {
@@ -198,12 +357,56 @@ function handleAnswer(
     return;
   }
 
+  const question = state.currentQuestion;
+  const elapsedMs = state.questionStartTimestamp
+    ? Date.now() - state.questionStartTimestamp
+    : 0;
+  const sanitizedElapsed = elapsedMs < 0 ? 0 : elapsedMs;
+  const correctAnswerText =
+    question?.incorrect_answers?.[question.correct_answer] ?? "";
+  const providedAnswerText =
+    question?.incorrect_answers?.[answerIndex] ?? String(choice_id);
+  const questionNumber = state.currentIndex + 1;
+  const category = question?.category ?? state.quizName ?? "";
+  const difficulty = question?.difficulty ?? "unknown";
+
+  const snapshotScores = () => get_room_scores(room);
+  const computePosition = (scores: RoomUser[]) =>
+    scores.findIndex((entry) => entry.user_id === user.user_id) + 1;
+
+  const updateLog = (
+    correct: boolean,
+    scoreAwarded: number,
+    scores: RoomUser[]
+  ) => {
+    const playerRecord = room.users.find(
+      (member) => member.user_id === user.user_id
+    );
+    recordAnswerLog(state, room, user, {
+      questionNumber,
+      correct,
+      scoreAwarded,
+      totalScore: playerRecord?.score ?? 0,
+      leaderboardPosition: computePosition(scores),
+      timeMs: sanitizedElapsed,
+      providedAnswerIndex: answerIndex,
+      providedAnswer: providedAnswerText,
+      correctAnswer: correctAnswerText,
+      difficulty,
+      category,
+    });
+  };
+
   if (answerIndex !== state.currentQuestion.correct_answer) {
     roomLogger.debug("Handle answer: incorrect response", {
       room: room.room_name,
       user: user.user_name,
       choice_id,
     });
+
+    const scoresSnapshot = snapshotScores();
+    updateLog(false, 0, scoresSnapshot);
+
     target.to(room.host_socket_id).emit("progression_update", {
       questionIndex: state.currentIndex,
       userName: user.user_name,
@@ -232,6 +435,8 @@ function handleAnswer(
   }
 
   add_score(room, user.user_id, score_to_add);
+  const scoresSnapshot = snapshotScores();
+  updateLog(true, score_to_add, scoresSnapshot);
   roomLogger.info("Score awarded", {
     room: room.room_name,
     user: user.user_name,
@@ -270,6 +475,22 @@ async function runQuiz(
   const json = JSON.parse(data) as { results: RawQuestion[] };
   add_ten_questions(room, json.results);
 
+  state.quizName = category_selected;
+  state.questionCount = room.ten_questions.length;
+  state.playersAtStart = Array.from(
+    new Set(
+      room.users
+        .filter((member) => !member.is_host)
+        .map((member) => member.user_name)
+    )
+  );
+  state.answerLog = [];
+  state.quizStartedAt = state.quizStartedAt ?? new Date().toISOString();
+  state.hostNameSnapshot =
+    state.hostNameSnapshot ||
+    room.users.find((member) => member.is_host)?.user_name ||
+    "";
+
   for (let index = 0; index < 10; index += 1) {
     if (!state.running) {
       roomLogger.info("Quiz loop exiting early (not running)", {
@@ -291,6 +512,7 @@ async function runQuiz(
     state.currentQuestion = nextQuestion;
     state.currentIndex = index;
     state.isFirstToAnswer = true;
+    state.questionStartTimestamp = Date.now();
 
     roomLogger.info("Question dispatched", {
       room: room.room_name,
