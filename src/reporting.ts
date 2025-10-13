@@ -142,6 +142,12 @@ export async function appendQuizReport({ answers, summary }: QuizReportPayload):
     const answersSheet = workbook.getWorksheet(ANSWERS_SHEET)!;
     const gamesSheet = workbook.getWorksheet(GAMES_SHEET)!;
 
+    logger.debug("Report workbook loaded", {
+      reportPath,
+      answersExistingRows: answersSheet.rowCount,
+      gamesExistingRows: gamesSheet.rowCount,
+    });
+
     answers.forEach((row) => {
       answersSheet.addRow({
         ...row,
@@ -163,6 +169,8 @@ export async function appendQuizReport({ answers, summary }: QuizReportPayload):
     logger.info("Quiz report appended", {
       reportPath,
       answersAdded: answers.length,
+      answersRowCount: answersSheet.rowCount,
+      gamesRowCount: gamesSheet.rowCount,
     });
 
   } catch (error) {
