@@ -65,11 +65,46 @@ function createPlayers(address: string, count: number): PlayerContext[] {
   });
 }
 
-async function waitForEvent<T>(socket: Socket, event: string): Promise<T> {
+async function waitForConnection(socket: Socket, label: string) {
+  if (socket.connected) {
+    return;
+  }
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timeout waiting for ${label} connection`));
+    }, 15000);
+
+    const onConnect = () => {
+      cleanup();
+      resolve();
+    };
+
+    const onError = (error: unknown) => {
+      cleanup();
+      reject(new Error(`Failed to connect ${label}: ${error}`));
+    };
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      socket.off("connect", onConnect);
+      socket.off("connect_error", onError);
+    };
+
+    socket.once("connect", onConnect);
+    socket.once("connect_error", onError);
+  });
+}
+
+async function waitForEvent<T>(
+  socket: Socket,
+  event: string,
+  timeoutMs = 60000
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Timeout waiting for event ${event}`));
-    }, 15000);
+    }, timeoutMs);
 
     socket.once(event, (payload: T) => {
       clearTimeout(timeout);
@@ -82,13 +117,24 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
   console.log(`\n=== Round ${roundIndex + 1} ===`);
   console.log(`Using room: ${host.room}`);
 
-  const hostReady = waitForEvent<{ room: string }>(host.socket, "room_created");
+  await waitForConnection(host.socket, `host ${host.name}`);
+
+  const hostReady = waitForEvent<{ room: string }>(
+    host.socket,
+    "room_created",
+    15000
+  );
   host.socket.emit("create_room", { username: host.name, room: host.room });
   await hostReady;
   console.log(`Host created room ${host.room}`);
 
   const playerJoins = players.map(async (player) => {
-    const joined = waitForEvent<{ room: string }>(player.socket, "room_joined");
+    await waitForConnection(player.socket, `player ${player.name}`);
+    const joined = waitForEvent<{ room: string }>(
+      player.socket,
+      "room_joined",
+      15000
+    );
     player.socket.emit("join_room", { username: player.name, room: host.room });
     await joined;
     console.log(`Player ${player.name} joined ${host.room}`);
@@ -99,7 +145,7 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
   const startSignal = waitForEvent<{
     players: string[];
     questionCount: number;
-  }>(host.socket, "quiz_started");
+  }>(host.socket, "quiz_started", 30000);
   host.socket.emit("ask_start_game", args.category ?? DEFAULT_CATEGORY);
   const { players: startPlayers, questionCount } = await startSignal;
   console.log(
@@ -117,7 +163,12 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
     });
   });
 
-  await waitForEvent(host.socket, "quiz_finished");
+  const estimatedQuestionWindow = 25000;
+  const finishTimeout = Math.max(
+    60000,
+    (questionCount || 1) * estimatedQuestionWindow
+  );
+  await waitForEvent(host.socket, "quiz_finished", finishTimeout);
   console.log("Quiz finished");
 
   players.forEach((player) => {
@@ -127,20 +178,20 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
 }
 
 async function runSimulation(args: Args) {
-  const host = createHost(args.address);
-  const players = createPlayers(args.address, args.players);
+  for (let round = 0; round < args.rounds; round += 1) {
+    const host = createHost(args.address);
+    const players = createPlayers(args.address, args.players);
 
-  try {
-    for (let round = 0; round < args.rounds; round += 1) {
+    try {
       await runRound(args, host, players, round);
-      host.room = `room-${Math.random().toString(36).slice(2, 8)}`;
-      await sleep(1000);
+    } catch (error) {
+      console.error("Simulation error", error);
+      break;
+    } finally {
+      host.socket.disconnect();
+      players.forEach((player) => player.socket.disconnect());
+      await sleep(500);
     }
-  } catch (error) {
-    console.error("Simulation error", error);
-  } finally {
-    host.socket.disconnect();
-    players.forEach((player) => player.socket.disconnect());
   }
 }
 
