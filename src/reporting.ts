@@ -49,7 +49,11 @@ export interface GameSummaryRow {
 const ANSWERS_SHEET = "Answers";
 const GAMES_SHEET = "Games";
 
-const defaultReportPath = path.join(os.homedir(), "trivia-report.xlsx");
+const defaultReportPath = path.join(
+  process.cwd(),
+  "reports",
+  "trivia-report.xlsx"
+);
 
 function resolveReportPath(raw?: string): string {
   if (raw && raw.startsWith("~")) {
