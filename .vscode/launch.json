@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Trivia Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": true,
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "SERVER_PORT": "3000"
+      }
+    },
+    {
+      "name": "Debug Simulator",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--", "--address", "http://localhost:3000", "--players", "5", "--rounds", "1"],
+      "cwd": "${workspaceFolder}/packages/simulator",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

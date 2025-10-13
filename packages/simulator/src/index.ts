@@ -47,6 +47,18 @@ function createHost(address: string): HostContext {
     transports: ["websocket"],
   });
 
+  socket.on("connect", () => {
+    console.log(`[host] connected (${socket.id})`);
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error(`[host] connect_error`, error.message);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log(`[host] disconnected (${reason})`);
+  });
+
   return {
     socket,
     room: `room-${Math.random().toString(36).slice(2, 8)}`,
@@ -60,6 +72,19 @@ function createPlayers(address: string, count: number): PlayerContext[] {
       transports: ["websocket"],
     });
     const name = `${NAME_PREFIX}-${index + 1}`;
+
+    socket.on("connect", () => {
+      console.log(`[${name}] connected (${socket.id})`);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error(`[${name}] connect_error`, error.message);
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log(`[${name}] disconnected (${reason})`);
+    });
+
     return {
       socket,
       name,
@@ -111,8 +136,11 @@ async function waitForEvent<T>(
 
     socket.once(event, (payload: T) => {
       clearTimeout(timeout);
+      console.log(`[event] ${event} received`);
       resolve(payload);
     });
+
+    console.log(`[event] waiting for ${event} (timeout ${timeoutMs}ms)`);
   });
 }
 
@@ -177,6 +205,9 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
   console.log(
     `Quiz has ${questionCount} questions for players: ${startPlayers.join(", ")}`
   );
+  console.log(
+    `Durations (ms): question=${serverQuestionDuration}, result=${serverResultDuration}, leaderboard=${serverLeaderboardDuration}`
+  );
 
   players.forEach((player) => {
     player.socket.on("display_question", async (payload) => {
@@ -184,8 +215,10 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
       player.questionTimings[index] = Date.now();
       const choice = pickRandomIndex(all_answers.length);
       const delay = randomDelay(args.delayMin ?? 500, args.delayMax ?? 2000);
+      console.log(`[${player.name}] received question ${index + 1}, answering with ${choice} after ${delay}ms`);
       await sleep(delay);
       player.socket.emit("user_sent_choice", String(choice));
+      console.log(`[${player.name}] sent answer ${choice} for question ${index + 1}`);
     });
   });
 
@@ -197,7 +230,7 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
     (questionCount || 1) * estimatedQuestionWindow
   );
   await waitForEvent(host.socket, "quiz_finished", finishTimeout);
-  console.log("Quiz finished");
+  console.log(`Quiz finished (round ${roundIndex + 1})`);
 
   players.forEach((player) => {
     player.socket.off("display_question");

@@ -164,6 +164,7 @@ export async function appendQuizReport({ answers, summary }: QuizReportPayload):
       reportPath,
       answersAdded: answers.length,
     });
+
   } catch (error) {
     logger.error("Failed to append quiz report", {
       error,
