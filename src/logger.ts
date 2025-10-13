@@ -1,6 +1,12 @@
 import { createLogger, format, transports } from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
+import path from "node:path";
+import fs from "node:fs";
 
 const timestampFormat = format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" });
+
+const logDir = path.join(process.cwd(), "logs");
+fs.mkdirSync(logDir, { recursive: true });
 
 export const logger = createLogger({
   level: process.env.LOG_LEVEL || "info",
@@ -23,6 +29,14 @@ export const logger = createLogger({
           return `${timestamp} [${level}] ${message}${metaString}`;
         })
       ),
+    }),
+    new DailyRotateFile({
+      dirname: logDir,
+      filename: "trivia-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: false,
+      maxSize: "20m",
+      maxFiles: process.env.LOG_MAX_FILES || "14d",
     }),
   ],
 });
