@@ -1,4 +1,5 @@
 const QUESTION_TIME_SECONDS = 18;
+const DEFAULT_CATEGORY = "aws-basic-networking";
 
 const socket = io();
 let role = null;
@@ -33,6 +34,10 @@ const hostLeaderboardBody = document.getElementById(
 const categorySelect = document.getElementById("category_select");
 const startGameBtn = document.getElementById("startgame_btn");
 const endGameBtn = document.getElementById("endgame_btn");
+const hostBackBtn = document.getElementById("host_back_btn");
+const questionDurationInput = document.getElementById(
+  "question_duration_input"
+);
 
 // Player join form
 const joinNameInput = document.getElementById("join_username_input");
@@ -90,6 +95,7 @@ const STORAGE_KEYS = {
   hostRoom: "triviaTen.hostRoom",
   playerName: "triviaTen.playerName",
   playerRoom: "triviaTen.playerRoom",
+  questionDuration: "triviaTen.questionDurationSeconds",
 };
 
 function getStoredValue(key) {
@@ -123,6 +129,12 @@ function hydrateStoredInputs() {
   }
   if (joinRoomInput) {
     joinRoomInput.value = getStoredValue(STORAGE_KEYS.playerRoom);
+  }
+  if (questionDurationInput instanceof HTMLInputElement) {
+    const stored = getStoredValue(STORAGE_KEYS.questionDuration);
+    if (stored) {
+      questionDurationInput.value = stored;
+    }
   }
 }
 
@@ -567,9 +579,25 @@ function handleStartGame() {
     return;
   }
 
-  const selectedCategory = categorySelect?.value ?? "";
-  logClientEvent("Emit: ask_start_game", { category: selectedCategory });
-  socket.emit("ask_start_game", selectedCategory);
+  const selectedCategory = categorySelect?.value || DEFAULT_CATEGORY;
+  let questionDurationSeconds = 18;
+  if (questionDurationInput instanceof HTMLInputElement) {
+    const parsed = Number.parseFloat(questionDurationInput.value);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      questionDurationSeconds = parsed;
+    }
+    setStoredValue(STORAGE_KEYS.questionDuration, String(questionDurationSeconds));
+  }
+
+  const questionDurationMs = Math.round(questionDurationSeconds * 1000);
+
+  const payload = {
+    category: selectedCategory,
+    questionDurationMs,
+  };
+
+  logClientEvent("Emit: ask_start_game", payload);
+  socket.emit("ask_start_game", payload);
 }
 
 function handleEndGame() {

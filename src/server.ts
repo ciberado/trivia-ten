@@ -65,9 +65,17 @@ interface RoomGameState {
   answerLog: AnswerReportRow[];
   quizStartedAt: string;
   hostNameSnapshot: string;
+  questionDurationMs: number;
+  resultDurationMs: number;
+  leaderboardDurationMs: number;
 }
 
 const roomGameState = new Map<string, RoomGameState>();
+
+const DEFAULT_CATEGORY = "aws-basic-networking";
+const DEFAULT_QUESTION_DURATION_MS = 18_000;
+const DEFAULT_RESULT_DURATION_MS = 3_000;
+const DEFAULT_LEADERBOARD_DURATION_MS = 3_000;
 
 function initializeQuizState(room: Room): RoomGameState {
   const existing = roomGameState.get(room.room_name);
@@ -86,6 +94,9 @@ function initializeQuizState(room: Room): RoomGameState {
     quizStartedAt: new Date().toISOString(),
     hostNameSnapshot:
       room.users.find((member) => member.is_host)?.user_name ?? "",
+    questionDurationMs: DEFAULT_QUESTION_DURATION_MS,
+    resultDurationMs: DEFAULT_RESULT_DURATION_MS,
+    leaderboardDurationMs: DEFAULT_LEADERBOARD_DURATION_MS,
   };
   state.currentQuestion = undefined;
   state.currentIndex = 0;
@@ -103,6 +114,9 @@ function initializeQuizState(room: Room): RoomGameState {
     room.users.find((member) => member.is_host)?.user_name ??
     state.hostNameSnapshot ??
     "";
+  state.questionDurationMs = DEFAULT_QUESTION_DURATION_MS;
+  state.resultDurationMs = DEFAULT_RESULT_DURATION_MS;
+  state.leaderboardDurationMs = DEFAULT_LEADERBOARD_DURATION_MS;
   roomGameState.set(room.room_name, state);
   room.quiz_active = true;
   return state;
@@ -290,6 +304,71 @@ function buildGameSummary(
     averageScorePerPlayer,
     winnerName: winner?.user_name,
     winnerScore: winner?.score,
+  };
+}
+
+function sanitizeDuration(
+  value: unknown,
+  fallback: number,
+  min = 500,
+  max = 5 * 60 * 1000
+): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const clamped = Math.max(min, Math.min(max, Math.floor(value)));
+    return clamped;
+  }
+  return fallback;
+}
+
+function normalizeQuizStartPayload(
+  payload:
+    | string
+    | {
+        category?: string;
+        questionDurationMs?: number;
+        resultDurationMs?: number;
+        leaderboardDurationMs?: number;
+      }
+): {
+  category: string;
+  questionDurationMs: number;
+  resultDurationMs: number;
+  leaderboardDurationMs: number;
+} {
+  if (typeof payload === "string") {
+    return {
+      category: payload || DEFAULT_CATEGORY,
+      questionDurationMs: DEFAULT_QUESTION_DURATION_MS,
+      resultDurationMs: DEFAULT_RESULT_DURATION_MS,
+      leaderboardDurationMs: DEFAULT_LEADERBOARD_DURATION_MS,
+    };
+  }
+
+  const category = payload.category && payload.category.trim()
+    ? payload.category
+    : DEFAULT_CATEGORY;
+  const questionDurationMs = sanitizeDuration(
+    payload.questionDurationMs,
+    DEFAULT_QUESTION_DURATION_MS
+  );
+  const resultDurationMs = sanitizeDuration(
+    payload.resultDurationMs,
+    DEFAULT_RESULT_DURATION_MS,
+    100,
+    60_000
+  );
+  const leaderboardDurationMs = sanitizeDuration(
+    payload.leaderboardDurationMs,
+    DEFAULT_LEADERBOARD_DURATION_MS,
+    100,
+    60_000
+  );
+
+  return {
+    category,
+    questionDurationMs,
+    resultDurationMs,
+    leaderboardDurationMs,
   };
 }
 
@@ -535,7 +614,7 @@ async function runQuiz(
         all_answers: nextQuestion.incorrect_answers,
       });
 
-    await sleep(18_000);
+    await sleep(state.questionDurationMs);
     if (!state.running) {
       break;
     }
@@ -547,7 +626,7 @@ async function runQuiz(
         correct_answer: nextQuestion.correct_answer,
       });
 
-    await sleep(3_000);
+    await sleep(state.resultDurationMs);
     if (!state.running) {
       break;
     }
@@ -563,7 +642,7 @@ async function runQuiz(
       });
     emitScoreboardUpdate(target, room);
 
-    await sleep(3_000);
+    await sleep(state.leaderboardDurationMs);
 
     roomLogger.debug("Leaderboard emitted", {
       room: room.room_name,
@@ -640,7 +719,18 @@ io.on("connection", (socket: Socket) => {
           }
         });
 
-        socket.on("ask_start_game", async (category_selected: string) => {
+        socket.on(
+          "ask_start_game",
+          async (
+            payload:
+              | string
+              | {
+                  category?: string;
+                  questionDurationMs?: number;
+                  resultDurationMs?: number;
+                  leaderboardDurationMs?: number;
+                }
+          ) => {
           const existingState = getQuizState(current_room);
           if (existingState?.running) {
             socketLog.warn("Start game rejected: quiz already running", {
@@ -664,6 +754,12 @@ io.on("connection", (socket: Socket) => {
           }
 
           const state = initializeQuizState(current_room);
+          const startOptions = normalizeQuizStartPayload(payload);
+          state.questionDurationMs = startOptions.questionDurationMs;
+          state.resultDurationMs = startOptions.resultDurationMs;
+          state.leaderboardDurationMs = startOptions.leaderboardDurationMs;
+          state.quizName = startOptions.category;
+
           reset_room_scores(current_room);
           emitScoreboardUpdate(io, current_room);
 
@@ -671,10 +767,13 @@ io.on("connection", (socket: Socket) => {
           socket.emit("quiz_started", {
             players: playerNames,
             questionCount: 10,
+            questionDurationMs: state.questionDurationMs,
+            resultDurationMs: state.resultDurationMs,
+            leaderboardDurationMs: state.leaderboardDurationMs,
           });
 
           try {
-            await runQuiz(io, current_room, category_selected);
+            await runQuiz(io, current_room, startOptions.category);
           } catch (error) {
             socketLog.error("Failed to run quiz", {
               error,
@@ -686,7 +785,8 @@ io.on("connection", (socket: Socket) => {
               message: "Unable to start quiz. Please try another category.",
             });
           }
-        });
+        }
+        );
 
         socket.on("ask_end_game", () => {
           const state = getQuizState(current_room);

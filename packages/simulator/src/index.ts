@@ -9,6 +9,9 @@ interface Args {
   category?: string;
   delayMin?: number;
   delayMax?: number;
+  questionDuration?: number;
+  resultDuration?: number;
+  leaderboardDuration?: number;
 }
 
 interface PlayerContext {
@@ -145,9 +148,32 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
   const startSignal = waitForEvent<{
     players: string[];
     questionCount: number;
+    questionDurationMs?: number;
+    resultDurationMs?: number;
+    leaderboardDurationMs?: number;
   }>(host.socket, "quiz_started", 30000);
-  host.socket.emit("ask_start_game", args.category ?? DEFAULT_CATEGORY);
-  const { players: startPlayers, questionCount } = await startSignal;
+  const questionDurationMs = Math.round(
+    (args.questionDuration ?? 18) * 1000
+  );
+  const resultDurationMs = Math.round((args.resultDuration ?? 3) * 1000);
+  const leaderboardDurationMs = Math.round(
+    (args.leaderboardDuration ?? 3) * 1000
+  );
+
+  host.socket.emit("ask_start_game", {
+    category: args.category ?? DEFAULT_CATEGORY,
+    questionDurationMs,
+    resultDurationMs,
+    leaderboardDurationMs,
+  });
+
+  const {
+    players: startPlayers,
+    questionCount,
+    questionDurationMs: serverQuestionDuration = questionDurationMs,
+    resultDurationMs: serverResultDuration = resultDurationMs,
+    leaderboardDurationMs: serverLeaderboardDuration = leaderboardDurationMs,
+  } = await startSignal;
   console.log(
     `Quiz has ${questionCount} questions for players: ${startPlayers.join(", ")}`
   );
@@ -163,7 +189,9 @@ async function runRound(args: Args, host: HostContext, players: PlayerContext[],
     });
   });
 
-  const estimatedQuestionWindow = 25000;
+  const cycleDuration =
+    serverQuestionDuration + serverResultDuration + serverLeaderboardDuration;
+  const estimatedQuestionWindow = Math.max(cycleDuration + 2000, 1000);
   const finishTimeout = Math.max(
     60000,
     (questionCount || 1) * estimatedQuestionWindow
@@ -229,6 +257,21 @@ async function main() {
       default: 2000,
       describe: "Maximum simulated answer delay (ms)",
     })
+    .option("questionDuration", {
+      type: "number",
+      default: 1,
+      describe: "Seconds allowed per question",
+    })
+    .option("resultDuration", {
+      type: "number",
+      default: 1,
+      describe: "Seconds to display results",
+    })
+    .option("leaderboardDuration", {
+      type: "number",
+      default: 1,
+      describe: "Seconds to display leaderboard",
+    })
     .check((parsed: Partial<Args>) => {
       if (!parsed.players || parsed.players <= 0) {
         throw new Error("Players must be greater than 0");
@@ -245,6 +288,15 @@ async function main() {
         parsed.delayMin > parsed.delayMax
       ) {
         throw new Error("delayMin cannot be greater than delayMax");
+      }
+      if ((parsed.questionDuration ?? 0) <= 0) {
+        throw new Error("questionDuration must be positive");
+      }
+      if ((parsed.resultDuration ?? 0) <= 0) {
+        throw new Error("resultDuration must be positive");
+      }
+      if ((parsed.leaderboardDuration ?? 0) <= 0) {
+        throw new Error("leaderboardDuration must be positive");
       }
       return true;
     })
