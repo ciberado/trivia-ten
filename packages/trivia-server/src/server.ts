@@ -764,13 +764,15 @@ io.on("connection", (socket: Socket) => {
           emitScoreboardUpdate(io, current_room);
 
           const playerNames = activePlayers.map((player) => player.user_name);
-          socket.emit("quiz_started", {
+          const quizStartedPayload = {
             players: playerNames,
             questionCount: 10,
             questionDurationMs: state.questionDurationMs,
             resultDurationMs: state.resultDurationMs,
             leaderboardDurationMs: state.leaderboardDurationMs,
-          });
+          };
+
+          io.to(current_room.room_name).emit("quiz_started", quizStartedPayload);
 
           try {
             await runQuiz(io, current_room, startOptions.category);
