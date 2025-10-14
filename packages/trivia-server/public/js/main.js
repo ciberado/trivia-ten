@@ -1,4 +1,6 @@
 const QUESTION_TIME_SECONDS = 18;
+const RESULT_TIME_SECONDS = 3;
+const LEADERBOARD_TIME_SECONDS = 3;
 const DEFAULT_CATEGORY = "aws-basic-networking";
 
 const socket = io();
@@ -89,6 +91,9 @@ const wrongSound = loadSound("../sounds/incorrect.wav");
 let quizInProgress = false;
 let latestHostPlayers = [];
 let progressionState = createEmptyProgressionState();
+let questionDurationMs = QUESTION_TIME_SECONDS * 1000;
+let resultDurationMs = RESULT_TIME_SECONDS * 1000;
+let leaderboardDurationMs = LEADERBOARD_TIME_SECONDS * 1000;
 
 const STORAGE_KEYS = {
   hostName: "triviaTen.hostName",
@@ -340,7 +345,7 @@ socket.on(
       progressBarInstance = new window.ProgressBar.Line(timerWrapper, {
         strokeWidth: 1,
         easing: "linear",
-        duration: QUESTION_TIME_SECONDS * 1000 - 2000,
+        duration: Math.max(questionDurationMs - 250, 0),
         color: "#eebbc3",
         trailColor: "#586497",
         trailWidth: 0.5,
@@ -785,19 +790,49 @@ function updateProgressionCell(player, questionIndex, correct) {
   }
 }
 
-socket.on("quiz_started", ({ players = [], questionCount = 10 } = {}) => {
-  logClientEvent("quiz_started received", { players, questionCount });
-  if (role === "host") {
-    quizInProgress = true;
-    if (players.length > 0) {
-      setStoredValue(STORAGE_KEYS.hostName, hostNameInput?.value.trim() ?? "");
-      setStoredValue(STORAGE_KEYS.hostRoom, hostRoomInput?.value.trim() ?? "");
+socket.on(
+  "quiz_started",
+  ({
+    players = [],
+    questionCount = 10,
+    questionDurationMs: serverQuestionDurationMs,
+    resultDurationMs: serverResultDurationMs,
+    leaderboardDurationMs: serverLeaderboardDurationMs,
+  } = {}) => {
+    if (typeof serverQuestionDurationMs === "number") {
+      questionDurationMs = Math.max(serverQuestionDurationMs, 0);
     }
-    resetProgressionTable(players, questionCount);
-    highlightProgressionColumn(-1);
-    syncHostControls();
+    if (typeof serverResultDurationMs === "number") {
+      resultDurationMs = Math.max(serverResultDurationMs, 0);
+    }
+    if (typeof serverLeaderboardDurationMs === "number") {
+      leaderboardDurationMs = Math.max(serverLeaderboardDurationMs, 0);
+    }
+
+    logClientEvent("quiz_started received", {
+      players,
+      questionCount,
+      questionDurationMs,
+      resultDurationMs,
+      leaderboardDurationMs,
+    });
+
+    if (role === "host" && questionDurationInput instanceof HTMLInputElement) {
+      questionDurationInput.value = (questionDurationMs / 1000).toString();
+    }
+
+    if (role === "host") {
+      quizInProgress = true;
+      if (players.length > 0) {
+        setStoredValue(STORAGE_KEYS.hostName, hostNameInput?.value.trim() ?? "");
+        setStoredValue(STORAGE_KEYS.hostRoom, hostRoomInput?.value.trim() ?? "");
+      }
+      resetProgressionTable(players, questionCount);
+      highlightProgressionColumn(-1);
+      syncHostControls();
+    }
   }
-});
+);
 
 socket.on("quiz_finished", ({ reason }) => {
   logClientEvent("quiz_finished received", { reason });
