@@ -1,32 +1,37 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `server.js` hosts the Express entry point, wires Socket.IO events, and serves everything beneath `public/`.
-- `rooms.js` manages in-memory room state; keep its helpers pure and reuse them instead of duplicating room logic.
-- Client assets live in `public/` (`js/`, `style/`, `sounds/`, and `index.html`), so front-end changes should stay there.
-- Trivia content sits in `questions/*.json`; follow the existing key structure and keep filenames kebab-cased.
-- High-level flows are captured in `docs/`; update these when you alter how game rounds progress.
+## Monorepo Structure & Module Organization
+- The repository is an npm workspaces monorepo: `packages/trivia-server` hosts the Express/Socket.IO backend and `packages/simulator` provides a headless test client.
+- `packages/trivia-server/src/server.ts` is the entry point; it serves static assets from `packages/trivia-server/public/` and wires socket events. Keep shared helpers in `src/` modules instead of duplicating logic.
+- `packages/trivia-server/src/rooms.ts` owns in-memory room state. Maintain its helpers as pure functions so socket handlers can remain thin.
+- Client assets live in `packages/trivia-server/public/` (`js/`, `style/`, `sounds/`, `index.html`); keep browser-only code there.
+- Trivia banks stay under `packages/trivia-server/questions/*.json`. Preserve the existing JSON key structure and keep filenames kebab-cased.
+- High-level round flows and architecture notes are documented in `packages/trivia-server/docs/`; update them when gameplay sequencing or reporting changes.
 
 ## Build, Test, and Development Commands
-- `npm install` sets up dependencies; run it once per environment or whenever `package-lock.json` changes.
-- `npm run dev` starts Nodemon for rapid iteration; it watches `server.js`, `rooms.js`, and public assets.
-- `npm start` runs the production-style server via plain Node for smoke tests or container deployment.
+- Run `npm install` once from the repository root to hydrate all workspaces.
+- Use `npm run dev --workspace=trivia-server` for live reload via `ts-node-dev`; it watches `src/`, `public/`, and `questions/`.
+- `npm run start --workspace=trivia-server` builds the TypeScript sources and serves the compiled `dist/` output for smoke tests or production parity checks.
+- Build artifacts explicitly with `npm run build --workspace=trivia-server` before bundling or deploying.
+- Exercise the simulator with `npm start --workspace=simulator -- --address http://localhost:3000 --players <n> --rounds <m>` when you need automated load/regression coverage.
 
 ## Coding Style & Naming Conventions
-- Use 2-space indentation, keep semicolons, and prefer double quotes on the server to match existing files.
-- Functions and variables in shared modules follow snake_case (`add_user`, `current_room`); stick with that unless you are touching client-only code, where camelCase is acceptable.
-- Group socket handlers logically and add brief comments before multi-step flows (join, question rotation, scoring) instead of inline noise.
+- Server-side TypeScript uses 2-space indentation, semicolons, and double quotes; match that when creating new modules.
+- Shared helpers and socket-facing functions stick with snake_case identifiers (e.g., `add_score`, `current_room`). Client-only JavaScript can continue using camelCase.
+- Keep socket handler groups cohesive and add short leading comments when a flow spans multiple emits (join, rotation, scoring) instead of verbose inline notes.
+- Extend `packages/trivia-server/src/types.ts` when introducing new question or room fields so type safety stays consistent.
 
-## Testing Guidelines
-- Automated tests are not yet wired; when adding them, colocate integration specs under `tests/` and run them by invoking `node` directly or via a future `npm test`.
-- Until then, exercise the app via `npm run dev`, open `http://localhost:3000`, and simulate multiple clients; confirm timers, scoreboards, and question rotation.
-- When adding question sets, validate JSON shape with a quick `node -e "require('./questions/aws-basic-networking.json')"` check before committing.
+## Testing & Validation
+- There is no automated test runner yet; manually verify via `npm run dev --workspace=trivia-server` and connect multiple browser tabs or the simulator to validate timers, scoring, and rotation.
+- When adding question sets, quickly validate JSON shape with `node -e "require('./packages/trivia-server/questions/<file>.json')"` before committing.
+- Generated quiz reports and logs live under each package’s `reports/` and `logs/` directories; inspect them when debugging end-to-end runs.
 
 ## Commit & Pull Request Guidelines
-- History mixes short sentences (`Working prototype.`) and typed prefixes (`chore: defines the devcontainer`); standardize on `<type>: <imperative summary>` (e.g., `feat: add streak multiplier UI`).
-- Make commits focused: server-side logic, data updates, and front-end tweaks should land separately to simplify reviews.
-- PRs must describe gameplay changes, list impacted files or directories, attach screenshots/GIFs for UI tweaks, and reference any related issue or doc update.
+- Standardize commit messages as `<type>: <imperative summary>` (e.g., `feat: add streak multiplier UI`).
+- Keep commits focused—separate backend logic, data updates, and front-end tweaks to ease reviews.
+- Pull requests should outline gameplay impacts, highlight touched areas (packages, docs), and include screenshots or GIFs for UI work while referencing any related docs that were updated.
 
 ## Configuration Tips
-- The server reads `PORT` from the environment; default is 3000. Mirror that in deployment manifests.
-- Keep `questions/*.json` under version control—avoid runtime edits—and regenerate any derived assets (demo data in `public/demo.json`) when question pools change.
+- The server reads `PORT` from the environment, defaulting to 3000; mirror that in deployment manifests and simulator configs.
+- TypeScript compiles to `packages/trivia-server/dist/`; clear or rebuild that directory instead of editing output by hand.
+- Keep `packages/trivia-server/questions/*.json` under version control—avoid runtime edits—and regenerate any derived demo assets (e.g., `public/demo.json`) whenever the question pool changes.
