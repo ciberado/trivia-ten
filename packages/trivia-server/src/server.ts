@@ -1,4 +1,3 @@
-import { promises as fs } from "node:fs";
 import path from "node:path";
 import http from "node:http";
 import express from "express";
@@ -15,21 +14,20 @@ import {
   remove_user,
   reset_room_scores,
 } from "./rooms";
-import type { Question, RawQuestion, Room, RoomUser } from "./types";
+import type { Question, Room, RoomUser } from "./types";
 import { logger, socketLogger, roomLogger } from "./logger";
 import {
   appendQuizReport,
   AnswerReportRow,
   GameSummaryRow,
 } from "./reporting";
+import { load_quiz } from "./question_loader";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 const publicDir = path.join(__dirname, "..", "public");
-const questionsDir = path.join(__dirname, "..", "questions");
-
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
@@ -547,14 +545,10 @@ async function runQuiz(
     room: room.room_name,
     category_selected,
   });
-  const data = await fs.readFile(
-    path.join(questionsDir, `${category_selected}.json`),
-    "utf-8"
-  );
-  const json = JSON.parse(data) as { results: RawQuestion[] };
-  add_ten_questions(room, json.results);
+  const quiz = await load_quiz(category_selected);
+  add_ten_questions(room, quiz.questions);
 
-  state.quizName = category_selected;
+  state.quizName = quiz.title || category_selected;
   state.questionCount = room.ten_questions.length;
   state.playersAtStart = Array.from(
     new Set(

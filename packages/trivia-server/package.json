@@ -16,12 +16,15 @@
     "express": "^5.1.0",
     "node-fetch": "^3.3.2",
     "progressbar.js": "^1.1.1",
+    "remark-parse": "^11.0.0",
     "socket.io": "^4.8.1",
+    "unified": "^11.0.4",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^24.7.1",
     "@types/socket.io": "^3.0.1",
     "nodemon": "^3.1.10",
