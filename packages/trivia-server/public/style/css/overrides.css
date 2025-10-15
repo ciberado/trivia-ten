@@ -61,7 +61,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -80,15 +80,30 @@
 
 .host__controls .button {
   flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.host__controls .button:not(.hidden) + .button:not(.hidden) {
+  margin-left: 0.75rem;
 }
 
 #question_duration_input {
-  width: 8rem;
-  padding: 0.75rem 1rem;
+  width: 6rem;
+  padding: 0 1rem;
   border-radius: 0.5rem;
   border: 1px solid rgba(238, 187, 195, 0.4);
   background: rgba(18, 22, 41, 0.6);
   color: #eebbc3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.host__controls .select,
+#question_duration_input {
+  height: 3.25rem;
 }
 
 .progression {
