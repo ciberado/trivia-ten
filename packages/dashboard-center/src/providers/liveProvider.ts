@@ -1,4 +1,4 @@
-import type { LiveProvider, LiveSubscribeParams } from "@refinedev/core";
+import type { LiveProvider } from "@refinedev/core";
 
 function noop() {
   // placeholder no-op
@@ -13,7 +13,7 @@ function buildSubscription() {
 }
 
 export const placeholderLiveProvider: LiveProvider = {
-  subscribe: (_params: LiveSubscribeParams) => buildSubscription(),
+  subscribe: (_params) => buildSubscription(),
   unsubscribe: () => Promise.resolve(),
   publish: async () => {
     noop();

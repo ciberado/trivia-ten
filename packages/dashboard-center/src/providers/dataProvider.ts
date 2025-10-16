@@ -1,15 +1,16 @@
 import type { DataProvider } from "@refinedev/core";
 
-const emptyList = { data: [], total: 0 };
-const emptyOne = { data: {} };
-
-export const placeholderDataProvider: DataProvider = {
-  getList: async () => emptyList,
+export const placeholderDataProvider = {
+  getList: async () => ({ data: [], total: 0 }),
   getMany: async () => ({ data: [] }),
-  getOne: async () => emptyOne,
-  create: async ({ variables }) => ({ data: variables ?? {} }),
-  update: async ({ variables }) => ({ data: variables ?? {} }),
-  deleteOne: async ({ id }) => ({ data: { id } }),
+  getOne: async () => ({ data: {} }),
+  create: async ({ variables }: { variables?: unknown }) => ({
+    data: variables ?? {},
+  }),
+  update: async ({ variables }: { variables?: unknown }) => ({
+    data: variables ?? {},
+  }),
+  deleteOne: async ({ id }: { id: unknown }) => ({ data: { id } }),
   getApiUrl: () => "/api",
-  custom: async () => emptyOne,
-};
+  custom: async () => ({ data: {} }),
+} as DataProvider;
