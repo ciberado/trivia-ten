@@ -1,0 +1,30 @@
+{
+  "name": "@trivia/dashboard-center",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Dashboard center for Trivia Ten operations and analytics, built with React and Refine.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@refinedev/antd": "^5.0.0",
+    "@refinedev/core": "^5.0.0",
+    "@refinedev/react-router-v6": "^5.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "antd": "^5.13.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  }
+}
