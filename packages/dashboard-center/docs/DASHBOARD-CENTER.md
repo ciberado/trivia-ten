@@ -2,6 +2,8 @@
 
 This document outlines the proposed `dashboard-center` workspace, a new React-based package that delivers operational and analytical dashboards for Trivia Ten. The application is built on [React](https://react.dev) with [Refine](https://refine.dev) to accelerate data presentation, state management, and admin-style workflows.
 
+> **Status:** WIP (mock data only). Realtime integrations and historical fetches are not yet wired to the trivia-server backend.
+
 ## Package Goals
 
 - Provide hosts and support staff with a browser-based control center that surfaces real-time game health and player activity.

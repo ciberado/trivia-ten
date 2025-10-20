@@ -1,12 +1,8 @@
 import { Refine } from "@refinedev/core";
 import routerBindings, { NavigateToResource } from "@refinedev/react-router-v6";
-import {
-  ThemedLayoutV2,
-  notificationProvider,
-  ErrorComponent,
-} from "@refinedev/antd";
+import { ThemedLayoutV2, notificationProvider } from "@refinedev/antd";
 import { App as AntApp, ConfigProvider, theme } from "antd";
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 
 import { placeholderDataProvider } from "./providers/dataProvider";
 import { placeholderLiveProvider } from "./providers/liveProvider";
@@ -54,17 +50,21 @@ export default function App(): JSX.Element {
               }
             >
               <Route index element={<NavigateToResource resource="realtime" />} />
-              <Route path="realtime" element={<RealtimeDashboard />} />
+              <Route path="/realtime" element={<RealtimeDashboard />} />
               <Route
-                path="game-analytics"
+                path="/game-analytics"
                 element={<GameAnalyticsDashboard />}
               />
               <Route
-                path="player-insights"
+                path="/games-analytics"
+                element={<Navigate to="/game-analytics" replace />}
+              />
+              <Route
+                path="/player-insights"
                 element={<PlayerInsightsDashboard />}
               />
             </Route>
-            <Route path="*" element={<ErrorComponent />} />
+            <Route path="*" element={<NavigateToResource resource="realtime" />} />
           </Routes>
         </Refine>
       </AntApp>
