@@ -5,3 +5,5 @@ packages/**/node_modules/
 packages/**/dist/
 packages/**/reports/
 packages/**/logs/
+.env
+
