@@ -1,9 +1,9 @@
 {
-  "title": "Aws Practitioner Sample Full",
+  "title": "Aws Practitioner Full",
   "response_code": 0,
   "results": [
     {
-      "category": "Aws Practitioner Sample Full",
+      "category": "Aws Practitioner Full",
       "type": "multiple",
       "difficulty": "medium",
       "question": "A company is planning to create a service that requires encryption in transit. The traffic must not be decrypted between the client and the backend of the service. The company will implement the service by using the gRPC protocol over TCP port 443. The service will scale up to thousands of simultaneous connections. The backend of the service will be hosted on an Amazon Elastic Kubernetes Service (Amazon EKS) cluster with the Kubernetes Cluster Autoscaler and the Horizontal Pod Autoscaler configured. The company needs to use mutual TLS for two-way authentication between the client and the backend.\n\nWhich solution will meet these requirements?",
@@ -14,26 +14,24 @@
         "Create a target group. Add the EKS managed node group's Auto Scaling group as a target. Create a Network Load Balancer with a TLS listener on port 443 to forward traffic to the target group."
       ],
       "topics": [
-        "encryption-in-transit",
-        "load-balancing",
-        "container-orchestration",
-        "mutual-tls-authentication",
-        "network-security"
+        "encryption-options",
+        "security-best-practices",
+        "high-availability",
+        "elasticity-agility"
       ],
       "services": [
-        "amazon-eks",
-        "aws-load-balancer-controller",
-        "network-load-balancer",
-        "application-load-balancer"
+        "eks",
+        "elb",
+        "kubernetes"
       ],
       "metadata": {
         "code": "Question 1",
-        "hint": "Consider which load balancer type and listener configuration allows encrypted traffic to pass through without decryption, and how the AWS Load Balancer Controller enables direct Pod targeting.",
-        "rationale": "This question evaluates understanding of encryption in transit, mutual TLS authentication requirements, the differences between ALB and NLB capabilities, and modern Kubernetes load balancing patterns using the AWS Load Balancer Controller."
+        "hint": "Focus on which load balancer type and listener configuration allows traffic to pass through without decryption, and which targeting method optimally routes to containerized workloads.",
+        "rationale": "The question assesses knowledge of encryption patterns (TLS passthrough vs. termination), load balancer capabilities at different OSI layers, and Kubernetes-specific networking patterns using the AWS Load Balancer Controller."
       }
     },
     {
-      "category": "Aws Practitioner Sample Full",
+      "category": "Aws Practitioner Full",
       "type": "multiple",
       "difficulty": "medium",
       "question": "A company has deployed an AWS Network Firewall firewall into a VPC. A network engineer needs to implement a solution to deliver Network Firewall flow logs to the company's Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster in the shortest possible time.\n\nWhich solution will meet these requirements?",
@@ -44,28 +42,27 @@
         "Create an Amazon Kinesis data stream that includes the Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster as the destination. Configure flow logs for the firewall. Set the Kinesis data stream as the destination for the Network Firewall flow logs."
       ],
       "topics": [
-        "network-security",
-        "logging-and-monitoring",
-        "data-streaming",
-        "near-real-time-analytics"
+        "logging-monitoring",
+        "security-best-practices",
+        "automation-benefits"
       ],
       "services": [
-        "aws-network-firewall",
-        "amazon-kinesis-data-firehose",
-        "amazon-opensearch-service",
-        "amazon-s3",
-        "aws-lambda",
-        "amazon-sns",
-        "amazon-kinesis-data-streams"
+        "network-firewall",
+        "kinesis-firehose",
+        "opensearch",
+        "s3",
+        "lambda",
+        "sns",
+        "kinesis"
       ],
       "metadata": {
         "code": "Question 2",
-        "hint": "Consider which AWS streaming service offers native integration with Amazon OpenSearch Service and requires the least operational overhead for near-real-time delivery.",
-        "rationale": "This question tests understanding of AWS Network Firewall logging capabilities, the differences between Kinesis Data Streams and Kinesis Data Firehose, and the appropriate architecture for streaming log data to analytics platforms with minimal latency."
+        "hint": "Consider which AWS service provides native integration between Network Firewall logs and OpenSearch Service without requiring custom code or additional processing steps.",
+        "rationale": "This question tests understanding of AWS logging architectures, real-time data streaming services, and the native integrations available for Network Firewall. It requires knowledge of which log destinations Network Firewall supports and which streaming service provides the most direct path to OpenSearch Service for near real-time delivery."
       }
     },
     {
-      "category": "Aws Practitioner Sample Full",
+      "category": "Aws Practitioner Full",
       "type": "multiple",
       "difficulty": "medium",
       "question": "A network engineer is designing a hybrid networking environment that will connect a company's corporate network to the company's AWS environment. The AWS environment consists of 30 VPCs in 3 AWS Regions.\n\nThe network engineer needs to implement a solution to centrally filter traffic by using a firewall that the company's security team has approved. The solution must give all the VPCs the ability to connect to each other. Connectivity between AWS and the corporate network must meet a minimum bandwidth requirement of 2 Gbps.\n\nWhich solution will meet these requirements?",
@@ -76,28 +73,25 @@
         "Deploy two 1 Gbps AWS Direct Connect connections in different Direct Connect locations to connect to the corporate network. Build a transit VIF on each connection to a Direct Connect gateway. Associate the Direct Connect gateway with a new transit gateway for each Region. Configure the VIFs to use equal-cost multipath (ECMP) routing. Connect all the VPCs in the three Regions to the transit gateway. Configure the transit gateway route table to route traffic to an inspection VPDeploy the approved firewall to the inspection VPC."
       ],
       "topics": [
-        "hybrid-connectivity",
-        "networking-architecture",
-        "transit-gateway",
-        "direct-connect",
-        "centralized-traffic-inspection",
+        "hybrid-networking",
         "high-availability",
-        "multi-region-architecture"
+        "security-best-practices",
+        "network-architecture"
       ],
       "services": [
-        "aws-direct-connect",
-        "aws-transit-gateway",
-        "amazon-vpc",
-        "direct-connect-gateway"
+        "direct-connect",
+        "transit-gateway",
+        "vpc",
+        "vpn"
       ],
       "metadata": {
         "code": "Question 3",
-        "hint": "Consider how to achieve both bandwidth requirements and high availability while enabling centralized traffic inspection across multiple Regions.",
-        "rationale": "This question assesses understanding of enterprise-grade hybrid networking architectures that require combining Direct Connect redundancy, transit gateway regional and inter-region connectivity, and centralized security inspection patterns."
+        "hint": "Consider how to achieve both the bandwidth requirement through redundant connections and centralized security filtering through proper routing architecture.",
+        "rationale": "The correct solution combines multiple AWS networking services in a way that meets all stated requirements: adequate bandwidth with redundancy (four 1 Gbps connections with ECMP), multi-region VPC connectivity (Transit Gateway with peering), hybrid connectivity (Direct Connect with Transit VIFs), and centralized security (inspection VPC with route table configurations)."
       }
     },
     {
-      "category": "Aws Practitioner Sample Full",
+      "category": "Aws Practitioner Full",
       "type": "multiple",
       "difficulty": "medium",
       "question": "A company uses an AWS Direct Connect private VIF with a link aggregation group (LAG) that consists of two 10 Gbps connections. The company's security team has implemented a new requirement for external network connections to provide layer 2 encryption. The company's network team plans to use MACsec support for Direct Connect to meet the new requirement.\n\nWhich combination of steps should the network team take to implement this functionality? (Choose three.)",
@@ -108,53 +102,18 @@
         "Configure the MACsec encryption mode on each Direct Connect connection that makes up the existing LAG."
       ],
       "topics": [
-        "networking",
-        "security",
-        "hybrid-connectivity",
-        "encryption"
+        "security-best-practices",
+        "encryption-options",
+        "hybrid-connectivity"
       ],
       "services": [
-        "aws-direct-connect"
+        "direct-connect"
       ],
       "metadata": {
         "correct_variants": "Associate the MACsec Connectivity Association Key (CAK) and the Connection Key Name (CKN) with the new LAG.||Configure the MACsec encryption mode on the new LAG.",
         "code": "Question 4",
-        "hint": "MACsec requires specific hardware support at Direct Connect locations and cannot be enabled on existing connections that lack this capability.",
-        "rationale": "This question assesses understanding of the architectural constraints of implementing layer 2 encryption with MACsec on AWS Direct Connect, including the requirement for new MACsec-capable infrastructure and the proper key management approach using CAK/CKN rather than IPsec's IKE protocol."
-      }
-    },
-    {
-      "category": "Aws Practitioner Sample Full",
-      "type": "multiple",
-      "difficulty": "medium",
-      "question": "A company recently implemented a security policy that prohibits developers from launching VPC network infrastructure. The policy states that any time a NAT gateway is launched in a VPC, the company's network security team must immediately receive an alert to terminate the NAT gateway. The network security team needs to implement a solution that can be deployed across AWS accounts with the least possible administrative overhead. The solution also must provide the network security team with a simple way to view compliance history.\n\nWhich solution will meet these requirements?",
-      "correct_answer": "Create a custom AWS Config rule that checks for NAT gateways in an AWS account. Configure the AWS Config rule to perform an AWS Systems Manager Automation remediation action to send an email alert and terminate the NAT gateway if a NAT gateway is detected. Deploy the AWS Config rule and the Systems Manager runbooks to each account by using AWS CloudFormation StackSets",
-      "incorrect_answers": [
-        "Develop a script that programmatically checks for NAT gateways in an AWS account, sends an email alert, and terminates the NAT gateway if a NAT gateway is detected. Deploy the script on an Amazon EC2 instance in each account. Use a cron job to run the script every 5 minutes. Log the results of the checks to an Amazon RDS for MySQL database.",
-        "Create an AWS Lambda function that programmatically checks for NAT gateways in an AWS account, sends an email alert, and terminates the NAT gateway if a NAT gateway is detected. Deploy the Lambda function to each account by using AWS Serverless Application Model (AWS SAM) templates. Store the results of the checks on an Amazon OpenSearch Service cluster in each account.",
-        "Enable Amazon GuardDuty. Create an Amazon EventBridge rule for the Behavior:EC2/NATGatewayCreation GuardDuty finding type. Configure the rule to invoke an AWS Step Functions state machine to send an email alert and terminate a NAT gateway if a NAT gateway is detected. Store the runtime log as a text file in an Amazon S3 bucket."
-      ],
-      "topics": [
-        "multi-account-governance",
-        "compliance-monitoring",
-        "automated-remediation",
-        "infrastructure-as-code",
-        "security-automation"
-      ],
-      "services": [
-        "aws-config",
-        "aws-systems-manager",
-        "aws-cloudformation",
-        "amazon-vpc",
-        "amazon-guardduty",
-        "aws-lambda",
-        "amazon-eventbridge",
-        "aws-step-functions"
-      ],
-      "metadata": {
-        "code": "Question 5",
-        "hint": "Look for a solution that provides continuous monitoring, native compliance history tracking, automated remediation, and efficient multi-account deployment through AWS-native services.",
-        "rationale": "This question evaluates the ability to architect scalable, compliant, multi-account solutions using AWS governance services while minimizing operational overhead through automation and infrastructure-as-code principles."
+        "hint": "MACsec requires specialized hardware support that must be provisioned when connections are first established, and it uses CAK/CKN keys rather than IKE for authentication.",
+        "rationale": "This question tests understanding of Direct Connect security features, specifically the requirements and limitations of implementing MACsec layer 2 encryption, which is a common requirement for enterprises with strict security compliance needs."
       }
     }
   ]

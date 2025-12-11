@@ -1,5 +1,6 @@
 import { HumanMessage } from "@langchain/core/messages";
 import type { BaseMessage } from "@langchain/core/messages";
+import { promises as fs } from "node:fs";
 
 import type { QuestionBank, RawQuestion, EnrichmentConfig } from "./types";
 import { inferTitleFromQuestions } from "./utils";
@@ -45,11 +46,23 @@ export async function enrichQuestionBank(
   const originalQuestionCount = bank.questions.length;
   const questionsToProcess = config.limit ? bank.questions.slice(0, config.limit) : bank.questions;
   
+  // Read exam guide content if provided
+  let examGuideContent = "";
+  if (config.examGuide) {
+    try {
+      examGuideContent = await fs.readFile(config.examGuide, "utf-8");
+      logger.info("Exam guide loaded", { path: config.examGuide, size: examGuideContent.length });
+    } catch (error) {
+      logger.warn("Failed to read exam guide", { path: config.examGuide, error });
+    }
+  }
+  
   logger.info("Enrichment run starting", {
     originalQuestionCount,
     questionCount: questionsToProcess.length,
     limit: config.limit,
     profile,
+    hasExamGuide: !!examGuideContent,
   });
   const preset = profile ? ENRICHMENT_PRESETS[profile] : undefined;
   const instruction = config.instruction ?? preset?.instruction ?? DEFAULT_INSTRUCTION;
@@ -81,6 +94,7 @@ export async function enrichQuestionBank(
       instruction,
       metadataKeys,
       config,
+      examGuideContent,
       concurrency,
       maxRetries,
       retryBaseDelayMs,
@@ -159,6 +173,7 @@ async function runEnrichmentQueue(params: {
   instruction: string;
   metadataKeys: string[];
   config: EnrichmentConfig;
+  examGuideContent?: string;
   concurrency: number;
   maxRetries: number;
   retryBaseDelayMs: number;
@@ -169,6 +184,7 @@ async function runEnrichmentQueue(params: {
     instruction,
     metadataKeys,
     config,
+    examGuideContent,
     concurrency,
     maxRetries,
     retryBaseDelayMs,
@@ -195,6 +211,7 @@ async function runEnrichmentQueue(params: {
             instruction,
             metadataKeys,
             config,
+            examGuideContent,
             question,
             index: currentIndex,
             maxRetries,
@@ -223,6 +240,7 @@ async function enrichWithRetry(params: {
   instruction: string;
   metadataKeys: string[];
   config: EnrichmentConfig;
+  examGuideContent?: string;
   question: RawQuestion;
   index: number;
   maxRetries: number;
@@ -234,6 +252,7 @@ async function enrichWithRetry(params: {
     instruction,
     metadataKeys,
     config,
+    examGuideContent,
     question,
     index,
     maxRetries,
@@ -248,7 +267,7 @@ async function enrichWithRetry(params: {
     attempt += 1;
     try {
       logger.debug("Enrich attempt", { workerId, index, attempt });
-      const prompt = buildPrompt(question, instruction, metadataKeys, config);
+      const prompt = buildPrompt(question, instruction, metadataKeys, config, examGuideContent);
       const response = await agent.run(prompt);
       return mergeQuestion(question, parseModelResponse(response, question));
     } catch (error) {
@@ -298,8 +317,31 @@ function parseEnvInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
-function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: string[], config: EnrichmentConfig): string {
+function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: string[], config: EnrichmentConfig, examGuideContent?: string): string {
   const discussion = question.discussion?.join("\n\n");
+
+  // Extract topics and services from exam guide if provided
+  let topicsGuidance = 'Set "topics" to an array of AWS Cloud Practitioner exam topics this question covers (e.g., "shared-responsibility-model", "well-architected-framework").';
+  let servicesGuidance = 'Set "services" to an array of AWS services mentioned or required knowledge (e.g., "amazon-ec2", "aws-iam", "amazon-s3").';
+  
+  if (examGuideContent) {
+    const topicsMatch = examGuideContent.match(/## Concepts to Understand\n([\s\S]*?)(?=\n##|\n$)/);
+    const servicesMatch = examGuideContent.match(/## AWS Services In Scope\n([\s\S]*?)(?=\n##|\n$)/);
+    
+    if (topicsMatch) {
+      const topics = topicsMatch[1].match(/- ([^\n]+)/g)?.map(t => t.replace(/^- /, '').trim()) || [];
+      if (topics.length > 0) {
+        topicsGuidance = `Set "topics" to an array of AWS Cloud Practitioner exam topics this question covers. Only use topics from this approved list: ${topics.slice(0, 20).join(', ')}${topics.length > 20 ? ', ...' : ''}.`;
+      }
+    }
+    
+    if (servicesMatch) {
+      const services = servicesMatch[1].match(/- ([^\n]+)/g)?.map(s => s.replace(/^- /, '').trim()) || [];
+      if (services.length > 0) {
+        servicesGuidance = `Set "services" to an array of AWS services mentioned or required knowledge. Only use services from this approved list: ${services.slice(0, 20).join(', ')}${services.length > 20 ? ', ...' : ''}.`;
+      }
+    }
+  }
 
   const basePrompt = [
     "You are enhancing trivia questions about AWS services.",
@@ -323,8 +365,8 @@ function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: s
     "",
     'Set "correct_explanation" to a single, well-developed paragraph that teaches why the correct answer is accurate.',
     'Set "incorrect_explanations" to an array of concise paragraphs (formatted "<answer>: explanation") that clarify why each distractor is wrong.',
-    'Set "topics" to an array of AWS Cloud Practitioner exam topics this question covers (e.g., "shared-responsibility-model", "well-architected-framework").',
-    'Set "services" to an array of AWS services mentioned or required knowledge (e.g., "amazon-ec2", "aws-iam", "amazon-s3").',
+    topicsGuidance,
+    servicesGuidance,
     "Include a discussion array only when you have meaningful additional context, and populate metadata keys solely if instructed.",
     "Keep all statements grounded in AWS best practices and draw from the discussion excerpts when they reinforce the reasoning.",
   ];

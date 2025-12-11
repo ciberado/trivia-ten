@@ -8,8 +8,8 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { enrichQuestionBank } from "./enrich";
-import { transformQuestionBank, saveQuestionBank } from "./transform";
-import type { BuilderOptions, EnrichmentConfig, QuestionBankFormat } from "./types";
+import { transformQuestionBank, saveQuestionBank, loadQuestionBank } from "./transform";
+import type { BuilderOptions, EnrichmentConfig, QuestionBankFormat, QuestionBank } from "./types";
 import { logger, setLogLevel } from "./logger";
 
 async function run(): Promise<void> {
@@ -138,10 +138,22 @@ async function run(): Promise<void> {
     targetFormat,
   });
 
-  const bank = await transformQuestionBank(options.inputPath, targetPath, {
-    inputFormat: explicitInputFormat ?? detectedInputFormat,
-    outputFormat,
-  });
+  // Load the question bank but don't save it yet if enrichment is enabled
+  let bank: QuestionBank;
+  if (options.enrich) {
+    // Only load when enriching, don't save the full bank
+    bank = await loadQuestionBank(options.inputPath, explicitInputFormat ?? detectedInputFormat);
+    logger.debug("Loaded question bank for enrichment", {
+      inputPath: options.inputPath,
+      questionCount: bank.questions.length,
+    });
+  } else {
+    // Normal transformation - load and save
+    bank = await transformQuestionBank(options.inputPath, targetPath, {
+      inputFormat: explicitInputFormat ?? detectedInputFormat,
+      outputFormat,
+    });
+  }
 
   if (options.enrich) {
     logger.info("Enrichment enabled; preparing Bedrock configuration");
