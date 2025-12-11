@@ -17,18 +17,23 @@ interface EnrichmentAgent {
 const ENRICHMENT_PRESETS: Record<string, EnrichmentPreset> = {
   "difficulty-balancer": {
     instruction:
-      "Review each trivia question and ensure difficulty labels align with AWS certification associate level expectations. Adjust the prompt for clarity while keeping the original intent, and supply a short rationale metadata field explaining the difficulty assignment.",
+      "Review each trivia question and ensure difficulty labels align with AWS certification associate level expectations. Adjust the prompt for clarity while keeping the original intent, and supply a short rationale metadata field explaining the difficulty assignment. Identify relevant AWS exam topics and services covered by each question.",
     metadataKeys: ["rationale", "target_audience", "topic"],
   },
   "explain-like-i5": {
     instruction:
-      "Rewrite the question prompt so that it can be understood by someone with very little AWS background. Provide a hint metadata field with a concise clue and a summary metadata field with one-sentence explanation of the answer.",
+      "Rewrite the question prompt so that it can be understood by someone with very little AWS background. Provide a hint metadata field with a concise clue and a summary metadata field with one-sentence explanation of the answer. Identify relevant AWS topics and services for learning context.",
     metadataKeys: ["hint", "summary"],
+  },
+  "topic-extractor": {
+    instruction:
+      "Analyze the trivia question and identify the specific AWS Cloud Practitioner exam topics it covers and the AWS services it relates to. Use the official exam guide structure for topic identification.",
+    metadataKeys: ["exam_domain", "complexity_notes"],
   },
 };
 
 const DEFAULT_INSTRUCTION =
-  "Improve the question prompt for clarity, ensure one correct answer and three incorrect answers remain aligned with AWS trivia, and produce thorough explanations for the correct choice plus succinct one-paragraph rebuttals for each incorrect option.";
+  "Improve the question prompt for clarity, ensure one correct answer and three incorrect answers remain aligned with AWS trivia, and produce thorough explanations for the correct choice plus succinct one-paragraph rebuttals for each incorrect option. Also identify relevant AWS exam topics and services covered by this question.";
 
 const agentCache = new Map<string, Promise<EnrichmentAgent>>();
 
@@ -67,6 +72,7 @@ export async function enrichQuestionBank(
     agent,
     instruction,
     metadataKeys,
+    config,
     concurrency,
     maxRetries,
     retryBaseDelayMs,
@@ -132,6 +138,7 @@ async function runEnrichmentQueue(params: {
   agent: EnrichmentAgent;
   instruction: string;
   metadataKeys: string[];
+  config: EnrichmentConfig;
   concurrency: number;
   maxRetries: number;
   retryBaseDelayMs: number;
@@ -141,6 +148,7 @@ async function runEnrichmentQueue(params: {
     agent,
     instruction,
     metadataKeys,
+    config,
     concurrency,
     maxRetries,
     retryBaseDelayMs,
@@ -166,6 +174,7 @@ async function runEnrichmentQueue(params: {
             agent,
             instruction,
             metadataKeys,
+            config,
             question,
             index: currentIndex,
             maxRetries,
@@ -193,6 +202,7 @@ async function enrichWithRetry(params: {
   agent: EnrichmentAgent;
   instruction: string;
   metadataKeys: string[];
+  config: EnrichmentConfig;
   question: RawQuestion;
   index: number;
   maxRetries: number;
@@ -203,6 +213,7 @@ async function enrichWithRetry(params: {
     agent,
     instruction,
     metadataKeys,
+    config,
     question,
     index,
     maxRetries,
@@ -217,7 +228,7 @@ async function enrichWithRetry(params: {
     attempt += 1;
     try {
       logger.debug("Enrich attempt", { workerId, index, attempt });
-      const prompt = buildPrompt(question, instruction, metadataKeys);
+      const prompt = buildPrompt(question, instruction, metadataKeys, config);
       const response = await agent.run(prompt);
       return mergeQuestion(question, parseModelResponse(response, question));
     } catch (error) {
@@ -267,7 +278,7 @@ function parseEnvInt(value: string | undefined, fallback: number): number {
   return parsed;
 }
 
-function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: string[]): string {
+function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: string[], config: EnrichmentConfig): string {
   const discussion = question.discussion?.join("\n\n");
 
   const basePrompt = [
@@ -281,6 +292,8 @@ function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: s
     '  "category": "...",',
     '  "difficulty": "...",',
     '  "type": "...",',
+    '  "topics": ["..."],',
+    '  "services": ["..."],',
     '  "correct_explanation": "...",',
     '  "incorrect_explanations": ["..."],',
     '  "discussion": ["..."],',
@@ -290,6 +303,8 @@ function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: s
     "",
     'Set "correct_explanation" to a single, well-developed paragraph that teaches why the correct answer is accurate.',
     'Set "incorrect_explanations" to an array of concise paragraphs (formatted "<answer>: explanation") that clarify why each distractor is wrong.',
+    'Set "topics" to an array of AWS Cloud Practitioner exam topics this question covers (e.g., "shared-responsibility-model", "well-architected-framework").',
+    'Set "services" to an array of AWS services mentioned or required knowledge (e.g., "amazon-ec2", "aws-iam", "amazon-s3").',
     "Include a discussion array only when you have meaningful additional context, and populate metadata keys solely if instructed.",
     "Keep all statements grounded in AWS best practices and draw from the discussion excerpts when they reinforce the reasoning.",
   ];
@@ -413,6 +428,24 @@ function parseModelResponse(response: string, fallback: RawQuestion): Partial<Ra
     }
     if (typeof parsed.type === "string" && parsed.type.trim()) {
       updates.type = parsed.type.trim();
+    }
+
+    if (Array.isArray(parsed.topics)) {
+      const filtered = parsed.topics.filter(
+        (entry): entry is string => typeof entry === "string" && entry.trim().length > 0
+      );
+      if (filtered.length > 0) {
+        updates.topics = filtered.map(topic => topic.trim());
+      }
+    }
+
+    if (Array.isArray(parsed.services)) {
+      const filtered = parsed.services.filter(
+        (entry): entry is string => typeof entry === "string" && entry.trim().length > 0
+      );
+      if (filtered.length > 0) {
+        updates.services = filtered.map(service => service.trim());
+      }
     }
 
     if (typeof (parsed as { correct_explanation?: unknown }).correct_explanation === "string") {
@@ -544,6 +577,8 @@ function mergeQuestion(question: RawQuestion, updates?: Partial<RawQuestion>): R
     question: updates.question ?? question.question,
     correct_answer: updates.correct_answer ?? question.correct_answer,
     incorrect_answers: mergedIncorrect,
+    topics: updates.topics ?? question.topics,
+    services: updates.services ?? question.services,
     discussion: updates.discussion ?? question.discussion,
     correct_explanation: updates.correct_explanation ?? question.correct_explanation,
     incorrect_explanations: updates.incorrect_explanations ?? question.incorrect_explanations,
@@ -567,6 +602,14 @@ function mergeQuestion(question: RawQuestion, updates?: Partial<RawQuestion>): R
 
   if (!merged.incorrect_explanations || merged.incorrect_explanations.length === 0) {
     delete merged.incorrect_explanations;
+  }
+
+  if (!merged.topics || merged.topics.length === 0) {
+    delete merged.topics;
+  }
+
+  if (!merged.services || merged.services.length === 0) {
+    delete merged.services;
   }
 
   return merged;

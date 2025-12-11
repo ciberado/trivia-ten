@@ -76,7 +76,7 @@ export async function saveQuestionBank(
   const payload = {
     title: data.title,
     response_code: 0,
-    results: data.questions.map(({ discussion, ...question }) => question),
+    results: data.questions.map(({ discussion, correct_explanation, incorrect_explanations, ...question }) => question),
   };
   await fs.writeFile(filePath, JSON.stringify(payload, null, 2), "utf-8");
 }
@@ -142,6 +142,8 @@ function normaliseRawQuestion(entry: unknown, index: number, filePath: string): 
   const question = readString(candidate.question);
   const correct_answer = readString(candidate.correct_answer);
   const incorrect_answers = readStringArray(candidate.incorrect_answers);
+  const topics = readStringArray(candidate.topics);
+  const services = readStringArray(candidate.services);
   const discussion = readStringArray(candidate.discussion);
   const correct_explanation = readString(candidate.correct_explanation);
   const incorrect_explanations = readStringArray(candidate.incorrect_explanations);
@@ -182,6 +184,8 @@ function normaliseRawQuestion(entry: unknown, index: number, filePath: string): 
     question,
     correct_answer,
     incorrect_answers,
+    topics: topics ?? undefined,
+    services: services ?? undefined,
     metadata: metadata ?? undefined,
     discussion: discussion ?? undefined,
     correct_explanation: extractedCorrectExplanation ?? undefined,

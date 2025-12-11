@@ -30,7 +30,7 @@ npx question-bank-builder --input input.md --output enriched.json --enrich --enr
 ## Supported Formats
 
 ### 1. Markdown (.md)
-Human-readable format with structured headings for questions, answers, and metadata.
+Human-readable format with structured headings for questions, answers, topics, services, and metadata.
 
 ```markdown
 # Quiz Title
@@ -40,10 +40,20 @@ Human-readable format with structured headings for questions, answers, and metad
 Question prompt paragraph
 
 ### Correct answers
-* At least one correct answer.
+* Single correct answer
 
 ### Incorrect answers  
-* At least two incorrect answers.
+* Distractor A
+* Distractor B
+* Distractor C
+
+### Topics
+* exam-topic-1
+* exam-topic-2
+
+### Services
+* aws-service-1
+* aws-service-2
 
 ### Metadata
 * Category: Quiz title
@@ -54,6 +64,9 @@ Question prompt paragraph
 ### Discussion
 * Optional community notes
 ```
+
+The **Topics** section contains AWS exam topics this question covers (e.g., "shared-responsibility-model", "well-architected-framework").
+The **Services** section lists AWS services mentioned or requiring knowledge (e.g., "amazon-ec2", "aws-iam", "amazon-s3").
 
 ### 2. JSON - Trivia Server Format
 Standard format used by the trivia-server package:
@@ -70,6 +83,8 @@ Standard format used by the trivia-server package:
       "question": "...",
       "correct_answer": "...",
       "incorrect_answers": ["..."],
+      "topics": ["vpc-fundamentals", "network-isolation"],
+      "services": ["amazon-vpc", "aws-regions"],
       "metadata": {
         "hint": "Optional metadata"
       }
@@ -86,8 +101,10 @@ Array-based format optimized for AI training/testing:
   {
     "code": "Question 1",
     "question": "...", 
-    "correct": ["...", "..."],
+    "correct": ["..."],
     "incorrect": ["...", "...", "..."],
+    "topics": ["shared-responsibility-model", "security-best-practices"],
+    "services": ["aws-iam", "aws-iam-identity-center"],
     "discussion": ["Community discussion entries"],
     "category": "Topic",
     "difficulty": "medium"
@@ -113,11 +130,13 @@ Core TypeScript interfaces:
 ```typescript
 interface RawQuestion {
   category: string;
-  type: string; 
+  type: string;
   difficulty: string;
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  topics?: string[];
+  services?: string[];
   metadata?: Record<string, string>;
   discussion?: string[];
   correct_explanation?: string;
@@ -144,10 +163,25 @@ interface QuestionBank {
 - `--enrichment-profile`: Apply preset configuration:
   - `difficulty-balancer`: Adjust difficulty labels for AWS certification level
   - `explain-like-i5`: Simplify language for beginners
+  - `topic-extractor`: Focus on identifying exam topics and AWS services
 - `--bedrock-model-id`: Bedrock model ID (e.g., `anthropic.claude-3-haiku-20240307-v1:0`)
 - `--aws-region`: AWS region for Bedrock API
 - `--instruction`: Custom enrichment prompt (overrides profile)
 - `--metadata-keys`: Comma-separated metadata keys to request from AI
+- `--extract-topics`: Enable automatic topic extraction (default: true)
+- `--extract-services`: Enable automatic AWS service identification (default: true)
+- `--exam-guide`: Path to exam guide file for topic/service reference
+
+## AWS Exam Integration
+
+### Topics and Services Support
+
+The question-bank-builder automatically identifies and tags questions with relevant AWS exam topics and services:
+
+- **Topics**: Exam concepts like "shared-responsibility-model", "well-architected-framework", "high-availability"
+- **Services**: AWS services like "amazon-ec2", "aws-iam", "amazon-s3", "aws-lambda"
+
+These are extracted during AI enrichment or can be manually specified in Markdown format.
 
 ## AI Enrichment System
 

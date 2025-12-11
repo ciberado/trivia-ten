@@ -87,6 +87,8 @@ function buildQuestionFromNodes(nodes: Content[], fallbackCategory: string): Raw
   const incorrect: string[] = [];
   const metadata: Record<string, string> = {};
   const discussionEntries: string[] = [];
+  const topics: string[] = [];
+  const services: string[] = [];
   let correctExplanation = "";
   let incorrectExplanationSegments: string[] = [];
 
@@ -138,6 +140,12 @@ function buildQuestionFromNodes(nodes: Content[], fallbackCategory: string): Raw
             .filter((value) => value.length > 0);
           discussionEntries.push(...text);
         }
+      } else if (headingText === "topics") {
+        const values = extractListValues(section);
+        topics.push(...values);
+      } else if (headingText === "services") {
+        const values = extractListValues(section);
+        services.push(...values);
       } else if (headingText === "metadata") {
         const metadataEntries = extractListValues(section);
         metadataEntries.forEach((entry) => {
@@ -182,6 +190,12 @@ function buildQuestionFromNodes(nodes: Content[], fallbackCategory: string): Raw
     type,
   };
 
+  if (topics.length > 0) {
+    result.topics = topics;
+  }
+  if (services.length > 0) {
+    result.services = services;
+  }
   if (discussionEntries.length > 0) {
     result.discussion = discussionEntries;
   }
@@ -308,6 +322,20 @@ export function serializeMarkdownBank(bank: QuestionBank): string {
     metadataEntries.forEach(([key, value]) => {
       lines.push(`* ${formatMetadataKey(key)}: ${value}`);
     });
+
+    if (question.topics && question.topics.length > 0) {
+      lines.push("", "### Topics", "");
+      question.topics.forEach((topic) => {
+        lines.push(`* ${topic}`);
+      });
+    }
+
+    if (question.services && question.services.length > 0) {
+      lines.push("", "### Services", "");
+      question.services.forEach((service) => {
+        lines.push(`* ${service}`);
+      });
+    }
 
     if (question.discussion && question.discussion.length > 0) {
       lines.push("", "### Discussion", "");

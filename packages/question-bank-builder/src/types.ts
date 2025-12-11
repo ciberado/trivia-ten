@@ -5,6 +5,8 @@ export interface RawQuestion {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  topics?: string[];
+  services?: string[];
   metadata?: Record<string, string>;
   discussion?: string[];
   correct_explanation?: string;
@@ -32,4 +34,7 @@ export interface EnrichmentConfig {
   awsRegion: string;
   instruction?: string;
   metadataKeys?: string[];
+  extractTopics?: boolean;
+  extractServices?: boolean;
+  examGuide?: string;
 }

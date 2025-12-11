@@ -13,6 +13,8 @@ interface AiSampleEntry {
   category?: unknown;
   difficulty?: unknown;
   type?: unknown;
+  topics?: unknown;
+  services?: unknown;
   correct_explanation?: unknown;
   incorrect_explanations?: unknown;
 }
@@ -85,6 +87,12 @@ export function serializeAiSampleBank(bank: QuestionBank): unknown[] {
     if (question.type) {
       entry.type = question.type;
     }
+    if (question.topics && question.topics.length > 0) {
+      entry.topics = question.topics;
+    }
+    if (question.services && question.services.length > 0) {
+      entry.services = question.services;
+    }
     if (question.metadata?.code) {
       entry.code = question.metadata.code;
     }
@@ -106,6 +114,8 @@ function normaliseAiSampleEntry(
   const correct = readStringArray(entry.correct);
   const incorrect = readStringArray(entry.incorrect);
   const discussion = readStringArray(entry.discussion);
+  const topics = readStringArray(entry.topics);
+  const services = readStringArray(entry.services);
   const correctExplanation = readString(entry.correct_explanation);
   const incorrectExplanations = readStringArray(entry.incorrect_explanations);
 
@@ -135,6 +145,14 @@ function normaliseAiSampleEntry(
 
   if (discussion && discussion.length > 0) {
     baseQuestion.discussion = discussion;
+  }
+
+  if (topics && topics.length > 0) {
+    baseQuestion.topics = topics;
+  }
+
+  if (services && services.length > 0) {
+    baseQuestion.services = services;
   }
 
   if (correctExplanation) {

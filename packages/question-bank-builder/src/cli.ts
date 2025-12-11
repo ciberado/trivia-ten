@@ -63,6 +63,20 @@ async function run(): Promise<void> {
       type: "string",
       description: "Comma separated list of metadata keys to ask the model to populate",
     })
+    .option("extract-topics", {
+      type: "boolean",
+      default: true,
+      description: "Enable automatic topic extraction from questions",
+    })
+    .option("extract-services", {
+      type: "boolean",
+      default: true,
+      description: "Enable automatic AWS service identification",
+    })
+    .option("exam-guide", {
+      type: "string",
+      description: "Path to exam guide file for topic and service reference",
+    })
     .option("verbose", {
       alias: "v",
       type: "boolean",
@@ -127,6 +141,9 @@ async function run(): Promise<void> {
       awsRegion: args["aws-region"] ?? process.env.AWS_REGION ?? "",
       instruction: args.instruction,
       metadataKeys: args["metadata-keys"] ? args["metadata-keys"].split(",").map((entry) => entry.trim()) : undefined,
+      extractTopics: args["extract-topics"],
+      extractServices: args["extract-services"],
+      examGuide: args["exam-guide"],
     };
 
     if (!config.bedrockModelId || !config.awsRegion) {
