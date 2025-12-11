@@ -365,6 +365,7 @@ function buildPrompt(question: RawQuestion, instruction: string, metadataKeys: s
     "",
     'Set "correct_explanation" to a single, well-developed paragraph that teaches why the correct answer is accurate.',
     'Set "incorrect_explanations" to an array of concise paragraphs (formatted "<answer>: explanation") that clarify why each distractor is wrong.',
+    'Set "difficulty" to "easy" for basic AWS knowledge, "medium" for intermediate scenarios requiring some analysis, or "hard" for complex multi-service questions requiring deep understanding.',
     topicsGuidance,
     servicesGuidance,
     "Include a discussion array only when you have meaningful additional context, and populate metadata keys solely if instructed.",
