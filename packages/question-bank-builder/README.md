@@ -31,6 +31,9 @@ npx question-bank-builder --input input.md --output enriched.json --enrich --enr
 
 # Process only first 5 questions for testing
 npx question-bank-builder --input large-question-bank.json --output first-5-enriched.json --enrich --limit 5 --bedrock-model-id anthropic.claude-3-haiku-20240307-v1:0 --aws-region us-east-1
+
+# Enrich with exam guide constraints for AWS Practitioner
+npx question-bank-builder --input aws-questions.json --output aws-enriched.json --enrich --exam-guide aws-practitioner-key-lists.md --extract-topics --extract-services --bedrock-model-id anthropic.claude-3-haiku-20240307-v1:0 --aws-region us-east-1
 ```
 
 ## Supported Formats
@@ -227,7 +230,9 @@ Environment variables for production tuning:
 - **Cost control**: Limiting AI API usage during development
 - **Quality sampling**: Generating enriched samples for review
 
-When using `--limit`, the output file contains only the processed questions, not the full original dataset.
+When using `--limit` with `--enrich`, the CLI efficiently loads the full question bank but only processes the limited subset during enrichment, ensuring the output file contains only the processed questions without copying the entire original dataset.
+
+**Exam Guide Integration**: Use `--exam-guide path/to/guide.md` to constrain enrichment to specific exam topics and AWS services. The exam guide should contain lists of relevant concepts and services that the AI will use to ensure questions align with certification requirements. Combine with `--extract-topics` and `--extract-services` to automatically identify and tag relevant exam domains.
 
 **Error Handling**: Questions that fail enrichment after retries are logged as warnings but don't halt the overall process.
 
@@ -318,13 +323,13 @@ npx question-bank-builder --input large-bank.json --output chunk2.json --enrich 
 # 1. Convert source material to markdown
 npx question-bank-builder --input scraped-questions.json --input-format ai-json --output draft.md
 
-# 2. Test enrichment on small subset first
-npx question-bank-builder --input draft.md --enrich --limit 3 --enrichment-profile difficulty-balancer --output test-enriched.json
+# 2. Test enrichment on small subset first with exam constraints
+npx question-bank-builder --input draft.md --enrich --limit 3 --exam-guide aws-practitioner-key-lists.md --extract-topics --extract-services --output test-enriched.json
 
-# 3. Enrich full dataset for difficulty balancing  
-npx question-bank-builder --input draft.md --enrich --enrichment-profile difficulty-balancer --output balanced.json
+# 3. Enrich full dataset for AWS certification alignment
+npx question-bank-builder --input draft.md --enrich --exam-guide aws-practitioner-key-lists.md --extract-topics --extract-services --enrichment-profile difficulty-balancer --output balanced.json
 
-# 4. Further enrich for accessibility
+# 4. Further enrich for accessibility while maintaining exam focus
 npx question-bank-builder --input balanced.json --enrich --enrichment-profile explain-like-i5 --output final.md
 ```
 

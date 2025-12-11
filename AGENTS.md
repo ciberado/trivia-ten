@@ -1,11 +1,11 @@
 # Repository Guidelines
 
 ## Monorepo Structure & Module Organization
-- The repository is an npm workspaces monorepo: `packages/trivia-server` hosts the Express/Socket.IO backend and `packages/simulator` provides a headless test client.
+- The repository is an npm workspaces monorepo: `packages/trivia-server` hosts the Express/Socket.IO backend, `packages/simulator` provides a headless test client, and `packages/question-bank-builder` offers CLI tooling for question bank transformation and AI enrichment.
 - `packages/trivia-server/src/server.ts` is the entry point; it serves static assets from `packages/trivia-server/public/` and wires socket events. Keep shared helpers in `src/` modules instead of duplicating logic.
 - `packages/trivia-server/src/rooms.ts` owns in-memory room state. Maintain its helpers as pure functions so socket handlers can remain thin.
 - Client assets live in `packages/trivia-server/public/` (`js/`, `style/`, `sounds/`, `index.html`); keep browser-only code there.
-- Trivia banks stay under `packages/trivia-server/questions/*.json`. Preserve the existing JSON key structure and keep filenames kebab-cased.
+- Trivia banks stay under `packages/trivia-server/questions/*.json`. Preserve the existing JSON key structure and keep filenames kebab-cased. Use `packages/question-bank-builder` to transform between formats or enrich with AI.
 - High-level round flows and architecture notes are documented in `packages/trivia-server/docs/`; update them when gameplay sequencing or reporting changes.
 
 ## Build, Test, and Development Commands
@@ -14,6 +14,7 @@
 - `npm run start --workspace=trivia-server` builds the TypeScript sources and serves the compiled `dist/` output for smoke tests or production parity checks.
 - Build artifacts explicitly with `npm run build --workspace=trivia-server` before bundling or deploying.
 - Exercise the simulator with `npm start --workspace=simulator -- --address http://localhost:3000 --players <n> --rounds <m>` when you need automated load/regression coverage.
+- Transform or enrich question banks with `npm run dev --workspace=question-bank-builder -- --input <file> --output <file> [--enrich --limit N]` for format conversion and AI enhancement.
 
 ## Coding Style & Naming Conventions
 - Server-side TypeScript uses 2-space indentation, semicolons, and double quotes; match that when creating new modules.

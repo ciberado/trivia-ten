@@ -6,6 +6,7 @@ This repository hosts the Trivia Ten ecosystem as npm workspaces.
 
 - `packages/trivia-server` – Express/Socket.IO server that powers the game (formerly the root project).
 - `packages/simulator` – Headless Socket.IO client that simulates hosts and players for load/regression tests.
+- `packages/question-bank-builder` – TypeScript CLI tool for transforming and AI-enriching trivia question banks.
 
 ## Getting Started
 
