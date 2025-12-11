@@ -1,0 +1,40 @@
+{
+  "title": "Test Small",
+  "response_code": 0,
+  "results": [
+    {
+      "category": "Test Small",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company is planning to create a service that requires encryption in transit. The traffic must not be decrypted between the client and the backend of the service. The company will implement the service by using the gRPC protocol over TCP port 443. The service will scale up to thousands of simultaneous connections. The backend of the service will be hosted on an Amazon Elastic Kubernetes Service (Amazon EKS) cluster with the Kubernetes Cluster Autoscaler and the Horizontal Pod Autoscaler configured. The company needs to use mutual TLS for two-way authentication between the client and the backend.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Install the AWS Load Balancer Controller for Kubernetes. Using that controller, configure a Network Load Balancer with a TCP listener on port 443 to forward traffic to the IP addresses of the backend service Pods.",
+      "incorrect_answers": [
+        "Install the AWS Load Balancer Controller for Kubernetes. Using that controller, configure an Application Load Balancer with an HTTPS listener on port 443 to forward traffic to the IP addresses of the backend service Pods.",
+        "Create a target group. Add the EKS managed node group's Auto Scaling group as a target Create an Application Load Balancer with an HTTPS listener on port 443 to forward traffic to the target group.",
+        "Create a target group. Add the EKS managed node group's Auto Scaling group as a target. Create a Network Load Balancer with a TLS listener on port 443 to forward traffic to the target group."
+      ],
+      "topics": [
+        "encryption-in-transit",
+        "kubernetes-networking",
+        "load-balancing",
+        "container-orchestration",
+        "mutual-tls-authentication",
+        "grpc-protocols",
+        "end-to-end-encryption",
+        "eks-integration"
+      ],
+      "services": [
+        "amazon-eks",
+        "aws-load-balancer-controller",
+        "elastic-load-balancing",
+        "network-load-balancer",
+        "application-load-balancer"
+      ],
+      "metadata": {
+        "code": "Question 1",
+        "hint": "Consider which load balancer type can forward encrypted traffic without decryption and how traffic should be routed in a Kubernetes environment with dynamic Pod scaling.",
+        "rationale": "This question tests understanding of AWS load balancer capabilities, encryption models, Kubernetes networking patterns, and the integration between EKS and AWS Load Balancer Controller for maintaining end-to-end security."
+      }
+    }
+  ]
+}

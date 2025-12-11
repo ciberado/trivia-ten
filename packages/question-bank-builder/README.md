@@ -19,12 +19,18 @@ The package is organized into focused modules:
 
 ```bash
 npm run build --workspace=question-bank-builder
+
 # Markdown → JSON (Trivia Server format)
 npx question-bank-builder --input packages/trivia-server/questions/aws-basic-networking.md --output-format json
+
 # AI sample JSON → Markdown
 npx question-bank-builder --input packages/question-bank-builder/samples/ai.json --input-format ai-json --output samples/ai.md
+
 # Enrich with AI while transforming
 npx question-bank-builder --input input.md --output enriched.json --enrich --enrichment-profile difficulty-balancer
+
+# Process only first 5 questions for testing
+npx question-bank-builder --input large-question-bank.json --output first-5-enriched.json --enrich --limit 5 --bedrock-model-id anthropic.claude-3-haiku-20240307-v1:0 --aws-region us-east-1
 ```
 
 ## Supported Formats
@@ -160,6 +166,7 @@ interface QuestionBank {
 
 ### AI Enrichment Options
 - `--enrich`: Enable Amazon Bedrock enrichment via LangGraph
+- `--limit`: Limit number of questions to process and output (e.g., `--limit 10` processes first 10 questions only)
 - `--enrichment-profile`: Apply preset configuration:
   - `difficulty-balancer`: Adjust difficulty labels for AWS certification level
   - `explain-like-i5`: Simplify language for beginners
@@ -171,6 +178,7 @@ interface QuestionBank {
 - `--extract-topics`: Enable automatic topic extraction (default: true)
 - `--extract-services`: Enable automatic AWS service identification (default: true)
 - `--exam-guide`: Path to exam guide file for topic/service reference
+- `--concurrency`: Number of concurrent enrichment workers (default: 1)
 
 ## AWS Exam Integration
 
@@ -212,6 +220,14 @@ Environment variables for production tuning:
 - `ENRICH_CONCURRENCY` (default `3`): Simultaneous Bedrock API workers
 - `ENRICH_MAX_RETRIES` (default `3`): Retry attempts per question
 - `ENRICH_RETRY_BASE_MS` (default `500`): Exponential backoff base delay
+
+**Limited Processing**: Use `--limit N` to process only the first N questions from the input. This is useful for:
+- **Testing enrichment**: Quick validation on small subsets before processing large datasets
+- **Incremental processing**: Breaking large question banks into manageable chunks  
+- **Cost control**: Limiting AI API usage during development
+- **Quality sampling**: Generating enriched samples for review
+
+When using `--limit`, the output file contains only the processed questions, not the full original dataset.
 
 **Error Handling**: Questions that fail enrichment after retries are logged as warnings but don't halt the overall process.
 
@@ -291,6 +307,10 @@ Handles structural variations:
 for file in packages/trivia-server/questions/*.md; do
   npx question-bank-builder --input "$file" --output-format json
 done
+
+# Process large datasets in chunks
+npx question-bank-builder --input large-bank.json --output chunk1.json --enrich --limit 50 --bedrock-model-id anthropic.claude-3-haiku-20240307-v1:0 --aws-region us-east-1
+npx question-bank-builder --input large-bank.json --output chunk2.json --enrich --limit 50 --offset 50 --bedrock-model-id anthropic.claude-3-haiku-20240307-v1:0 --aws-region us-east-1
 ```
 
 ### AI Enhancement Workflow
@@ -298,10 +318,13 @@ done
 # 1. Convert source material to markdown
 npx question-bank-builder --input scraped-questions.json --input-format ai-json --output draft.md
 
-# 2. Enrich with AI for difficulty balancing  
+# 2. Test enrichment on small subset first
+npx question-bank-builder --input draft.md --enrich --limit 3 --enrichment-profile difficulty-balancer --output test-enriched.json
+
+# 3. Enrich full dataset for difficulty balancing  
 npx question-bank-builder --input draft.md --enrich --enrichment-profile difficulty-balancer --output balanced.json
 
-# 3. Further enrich for accessibility
+# 4. Further enrich for accessibility
 npx question-bank-builder --input balanced.json --enrich --enrichment-profile explain-like-i5 --output final.md
 ```
 

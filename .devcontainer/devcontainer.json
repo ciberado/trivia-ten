@@ -10,6 +10,6 @@
 		"ghcr.io/devcontainers-extra/features/vscode-cli:1": {}
 	},
 
-	"postCreateCommand": "wget -O ~/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf && wget -O ~/.tmux.conf.local https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf.local"
+	"postCreateCommand": "wget -O ~/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf && wget -O ~/.tmux.conf.local https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf.local "
 
 }

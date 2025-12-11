@@ -26,15 +26,37 @@ export function normaliseAiSampleBank(payload: unknown, filePath: string): Quest
 
   const fallbackCategory = formatCategorySlug(path.basename(filePath, path.extname(filePath)));
 
-  const questions = payload.map((entry, index) =>
-    normaliseAiSampleEntry(entry as AiSampleEntry, index, fallbackCategory, filePath)
-  );
+  const questions: RawQuestion[] = [];
+  let skippedCount = 0;
+
+  payload.forEach((entry, index) => {
+    try {
+      const question = normaliseAiSampleEntry(entry as AiSampleEntry, index, fallbackCategory, filePath);
+      questions.push(question);
+    } catch (error) {
+      skippedCount++;
+      logger.warn("Skipping malformed question", {
+        filePath,
+        index,
+        error: error instanceof Error ? error.message : String(error),
+        questionPreview: typeof entry === 'object' && entry && 'code' in entry 
+          ? (entry as any).code 
+          : `Question at index ${index}`
+      });
+    }
+  });
+
+  if (questions.length === 0) {
+    throw new Error(`No valid questions found in AI sample bank at ${filePath}`);
+  }
 
   const title = inferTitleFromQuestions(questions, filePath);
 
-  logger.debug("Normalised AI sample bank", {
+  logger.info("Normalised AI sample bank", {
     filePath,
-    questionCount: questions.length,
+    totalQuestions: payload.length,
+    validQuestions: questions.length,
+    skippedQuestions: skippedCount,
     title,
   });
 
@@ -120,7 +142,12 @@ function normaliseAiSampleEntry(
   const incorrectExplanations = readStringArray(entry.incorrect_explanations);
 
   if (!question || !correct || correct.length === 0 || !incorrect || incorrect.length === 0) {
-    throw new Error(`AI sample question at index ${index} in ${filePath} is missing required fields`);
+    const missing = [];
+    if (!question) missing.push("question");
+    if (!correct || correct.length === 0) missing.push("correct answers");
+    if (!incorrect || incorrect.length === 0) missing.push("incorrect answers");
+    
+    throw new Error(`AI sample question at index ${index} in ${filePath} is missing required fields: ${missing.join(", ")}`);
   }
 
   const metadata: Record<string, string> = {};

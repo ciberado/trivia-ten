@@ -77,6 +77,15 @@ async function run(): Promise<void> {
       type: "string",
       description: "Path to exam guide file for topic and service reference",
     })
+    .option("concurrency", {
+      type: "number",
+      default: 1,
+      description: "Number of concurrent enrichment workers (default: 1 to avoid rate limits)",
+    })
+    .option("limit", {
+      type: "number",
+      description: "Maximum number of questions to process (useful for testing)",
+    })
     .option("verbose", {
       alias: "v",
       type: "boolean",
@@ -136,6 +145,7 @@ async function run(): Promise<void> {
 
   if (options.enrich) {
     logger.info("Enrichment enabled; preparing Bedrock configuration");
+    
     const config: EnrichmentConfig = {
       bedrockModelId: args["bedrock-model-id"] ?? process.env.BEDROCK_MODEL_ID ?? "",
       awsRegion: args["aws-region"] ?? process.env.AWS_REGION ?? "",
@@ -144,6 +154,8 @@ async function run(): Promise<void> {
       extractTopics: args["extract-topics"],
       extractServices: args["extract-services"],
       examGuide: args["exam-guide"],
+      concurrency: args.concurrency,
+      limit: args.limit,
     };
 
     if (!config.bedrockModelId || !config.awsRegion) {

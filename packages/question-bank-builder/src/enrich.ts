@@ -42,8 +42,13 @@ export async function enrichQuestionBank(
   config: EnrichmentConfig,
   profile?: string
 ): Promise<QuestionBank> {
+  const originalQuestionCount = bank.questions.length;
+  const questionsToProcess = config.limit ? bank.questions.slice(0, config.limit) : bank.questions;
+  
   logger.info("Enrichment run starting", {
-    questionCount: bank.questions.length,
+    originalQuestionCount,
+    questionCount: questionsToProcess.length,
+    limit: config.limit,
     profile,
   });
   const preset = profile ? ENRICHMENT_PRESETS[profile] : undefined;
@@ -55,7 +60,7 @@ export async function enrichQuestionBank(
     new Set([...baseMetadataKeys, ...requestedMetadataKeys])
   );
 
-  const concurrency = parseEnvInt(process.env.ENRICH_CONCURRENCY, 3);
+  const concurrency = config.concurrency ?? parseEnvInt(process.env.ENRICH_CONCURRENCY, 1);
   const maxRetries = parseEnvInt(process.env.ENRICH_MAX_RETRIES, 3);
   const retryBaseDelayMs = parseEnvInt(process.env.ENRICH_RETRY_BASE_MS, 500);
 
@@ -63,27 +68,42 @@ export async function enrichQuestionBank(
     concurrency,
     maxRetries,
     retryBaseDelayMs,
+    bedrockModelId: config.bedrockModelId,
+    awsRegion: config.awsRegion,
   });
 
-  const agent = await createEnrichmentAgent(config);
+  try {
+    const agent = await createEnrichmentAgent(config);
 
-  const enrichedQuestions = await runEnrichmentQueue({
-    questions: bank.questions,
-    agent,
-    instruction,
-    metadataKeys,
-    config,
-    concurrency,
-    maxRetries,
-    retryBaseDelayMs,
-  });
+    const enrichedQuestions = await runEnrichmentQueue({
+      questions: questionsToProcess,
+      agent,
+      instruction,
+      metadataKeys,
+      config,
+      concurrency,
+      maxRetries,
+      retryBaseDelayMs,
+    });
 
-  logger.info("Enrichment run complete", { enrichedCount: enrichedQuestions.length });
+    logger.info("Enrichment run complete", { 
+      enrichedCount: enrichedQuestions.length,
+      totalQuestions: bank.questions.length 
+    });
 
-  return {
-    title: bank.title || inferTitleFromQuestions(enrichedQuestions),
-    questions: enrichedQuestions,
-  };
+    // When using limit, only return the enriched subset, not the full dataset
+    const finalQuestions = config.limit 
+      ? enrichedQuestions  // Only return the limited enriched questions
+      : enrichedQuestions;
+
+    return {
+      title: bank.title || inferTitleFromQuestions(finalQuestions),
+      questions: finalQuestions,
+    };
+  } catch (error) {
+    logger.error("Enrichment failed", { error });
+    throw error;
+  }
 }
 
 async function createEnrichmentAgent(config: EnrichmentConfig): Promise<EnrichmentAgent> {

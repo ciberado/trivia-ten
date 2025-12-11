@@ -37,4 +37,6 @@ export interface EnrichmentConfig {
   extractTopics?: boolean;
   extractServices?: boolean;
   examGuide?: string;
+  concurrency?: number;
+  limit?: number;
 }

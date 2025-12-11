@@ -1,0 +1,158 @@
+{
+  "title": "Aws Subset",
+  "response_code": 0,
+  "results": [
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company is planning to create a service that requires encryption in transit. The traffic must not be decrypted between the client and the backend of the service. The company will implement the service by using the gRPC protocol over TCP port 443. The service will scale up to thousands of simultaneous connections. The backend of the service will be hosted on an Amazon Elastic Kubernetes Service (Amazon EKS) duster with the Kubernetes Cluster Autoscaler and the Horizontal Pod Autoscaler configured. The company needs to use mutual TLS for two-way authentication between the client and the backend.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Install the AWS Load Balancer Controller for Kubernetes. Using that controller, configure a Network Load Balancer with a TCP listener on port 443 to forward traffic to the IP addresses of the backend service Pods.",
+      "incorrect_answers": [
+        "Install the AWS Load Balancer Controller for Kubernetes. Using that controller, configure an Application Load Balancer with an HTTPS listener on port 443 to forward traffic to the IP addresses of the backend service Pods.",
+        "Create a target group. Add the EKS managed node group's Auto Scaling group as a target Create an Application Load Balancer with an HTTPS listener on port 443 to forward traffic to the target group.",
+        "Create a target group. Add the EKS managed node group’s Auto Scaling group as a target. Create a Network Load Balancer with a TLS listener on port 443 to forward traffic to the target group."
+      ],
+      "metadata": {
+        "code": "Question 1"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company has deployed an AWS Network Firewall firewall into a VPC. A network engineer needs to implement a solution to deliver Network Firewall flow logs to the company’s Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster in the shortest possible time.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Create an Amazon Kinesis Data Firehose delivery stream that includes the Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster as the destination. Configure flow logs for the firewall Set the Kinesis Data Firehose delivery stream as the destination for the Network Firewall flow logs.",
+      "incorrect_answers": [
+        "Create an Amazon S3 bucket. Create an AWS Lambda function to load logs into the Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster. Enable Amazon Simple Notification Service (Amazon SNS) notifications on the S3 bucket to invoke the Lambda function. Configure flow logs for the firewall. Set the S3 bucket as the destination.",
+        "Configure flow logs for the firewall. Set the Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster as the destination for the Network Firewall flow logs.",
+        "Create an Amazon Kinesis data stream that includes the Amazon OpenSearch Service (Amazon Elasticsearch Service) cluster as the destination. Configure flow logs for the firewall. Set the Kinesis data stream as the destination for the Network Firewall flow logs."
+      ],
+      "metadata": {
+        "code": "Question 2"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A network engineer is designing a hybrid networking environment that will connect a company's corporate network to the company's AWS environment. The AWS environment consists of 30 VPCs in 3 AWS Regions.\n\nThe network engineer needs to implement a solution to centrally filter traffic by using a firewall that the company's security team has approved. The solution must give all the VPCs the ability to connect to each other. Connectivity between AWS and the corporate network must meet a minimum bandwidth requirement of 2 Gbps.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Deploy four 1 Gbps AWS Direct Connect connections in different Direct Connect locations to connect to the corporate network. Build a transit VIF on each connection to a Direct Connect gateway. Associate the Direct Connect gateway with a new transit gateway for each Region. Connect the transit gateways by using a transit gateway peering attachment. Configure the VIFs to use equal-cost multipath (ECMP) routing. Configure transit gateway route tables to route traffic to an inspection VPC. Deploy the approved firewall to the inspection VPC.",
+      "incorrect_answers": [
+        "Deploy an IPsec VPN connection between the corporate network and a new transit gateway. Connect all VPCs to the transit gateway. Associate the approved firewall with the transit gateway.",
+        "Deploy a single 10 Gbps AWS Direct Connect connection between the corporate network and virtual private gateway of each VPC. Connect the virtual private gateways to a Direct Connect gateway. Build an IPsec tunnel to a new transit VPC. Deploy the approved firewall to the transit VPC.",
+        "Deploy two 1 Gbps AWS Direct Connect connections in different Direct Connect locations to connect to the corporate network. Build a transit VIF on each connection to a Direct Connect gateway. Associate the Direct Connect gateway with a new transit gateway for each Region. Configure the VIFs to use equal-cost multipath (ECMP) routing. Connect all the VPCs in the three Regions to the transit gateway. Configure the transit gateway route table to route traffic to an inspection VPDeploy the approved firewall to the inspection VPC."
+      ],
+      "metadata": {
+        "code": "Question 3"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company uses an AWS Direct Connect private VIF with a link aggregation group (LAG) that consists of two 10 Gbps connections. The company's security team has implemented a new requirement for external network connections to provide layer 2 encryption. The company's network team plans to use MACsec support for Direct Connect to meet the new requirement.\n\nWhich combination of steps should the network team take to implement this functionality? (Choose three.)",
+      "correct_answer": "Create a new Direct Connect LAG with new circuits and ports that support MACsec.",
+      "incorrect_answers": [
+        "Associate the Internet Key Exchange (IKE) with the existing LAG.",
+        "Configure the MACsec encryption mode on the existing LAG.",
+        "Configure the MACsec encryption mode on each Direct Connect connection that makes up the existing LAG."
+      ],
+      "metadata": {
+        "correct_variants": "Associate the MACsec Connectivity Association Key (CAK) and the Connection Key Name (CKN) with the new LAG.||Configure the MACsec encryption mode on the new LAG.",
+        "code": "Question 4"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company recently implemented a security policy that prohibits developers from launching VPC network infrastructure. The policy states that any time a NAT gateway is launched in a VPC, the company's network security team must immediately receive an alert to terminate the NAT gateway. The network security team needs to implement a solution that can be deployed across AWS accounts with the least possible administrative overhead. The solution also must provide the network security team with a simple way to view compliance history.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Create a custom AWS Config rule that checks for NAT gateways in an AWS account. Configure the AWS Config rule to perform an AWS Systems Manager Automation remediation action to send an email alert and terminate the NAT gateway if a NAT gateway is detected. Deploy the AWS Config rule and the Systems Manager runbooks to each account by using AWS CloudFormation StackSets",
+      "incorrect_answers": [
+        "Develop a script that programmatically checks for NAT gateways in an AWS account, sends an email alert, and terminates the NAT gateway if a NAT gateway is detected. Deploy the script on an Amazon EC2 instance in each account. Use a cron job to run the script every 5 minutes. Log the results of the checks to an Amazon RDS for MySQL database.",
+        "Create an AWS Lambda function that programmatically checks for NAT gateways in an AWS account, sends an email alert, and terminates the NAT gateway if a NAT gateway is detected. Deploy the Lambda function to each account by using AWS Serverless Application Model (AWS SAM) templates. Store the results of the checks on an Amazon OpenSearch Service cluster in each account.",
+        "Enable Amazon GuardDuty. Create an Amazon EventBridge rule for the Behavior:EC2/NATGatewayCreation GuardDuty finding type. Configure the rule to invoke an AWS Step Functions state machine to send an email alert and terminate a NAT gateway if a NAT gateway is detected. Store the runtime log as a text file in an Amazon S3 bucket."
+      ],
+      "metadata": {
+        "code": "Question 5"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company is running an online game on AWS. The game is played globally and is gaining popularity. Users are reporting problems with the game's responsiveness. Replay rates are dropping, and the company is losing subscribers. Game servers are located in the us-west-2 Region and use an Elastic Load Balancer to distribute client traffic.\n\nThe company has decided to deploy game servers to 11 additional AWS Regions to reduce the round-trip times of network traffic to game clients. A network engineer must design a DNS solution that uses Amazon Route 53 to ensure that user traffic is delivered to game servers with an optimal response time.\n\nWhat should the network engineer do to meet these requirements?",
+      "correct_answer": "Create Route 53 records for the Elastic Load Balancers in each Region. Specify a latency routing policy. Set the Region to the Region where the Elastic Load Balancer is deployed.",
+      "incorrect_answers": [
+        "Create Route 53 records for the Elastic Load Balancers in each Region. Specify a weighted routing policy. Calculate the weight by using the number of clients in each Region.",
+        "Create Route 53 records for the Elastic Load Balancers in each Region. Specify a multivalue answer routing policy. Test latency from the game client, and connect to the server with the best response.",
+        "Create Route 53 records for the Elastic Load Balancers in each Region. Specify a geolocation routing policy. Set the location to the Region where the Elastic Load Balancer is deployed."
+      ],
+      "metadata": {
+        "code": "Question 6"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A network engineer needs to build an encrypted connection between an on-premises data center and a VPC. The network engineer attaches the VPC to a virtual private gateway and sets up an AWS Site-to-Site VPN connection. The VPN tunnel is UP after configuration and is working. However, during rekey for phase 2 of the VPN negotiation, the customer gateway device is receiving different parameters than the parameters that the device is configured to support.\n\nThe network engineer checks the IPsec configuration of the VPN tunnel. The network engineer notices that the customer gateway device is configured with the most secure encryption algorithms that the AWS Site-to-Site VPN configuration file provides.\n\nWhat should the network engineer do to troubleshoot and correct the issue?",
+      "correct_answer": "Check the native customer gateway logs. Restrict the VPN tunnel options to the specific VPN parameters that the customer gateway requires.",
+      "incorrect_answers": [
+        "Check the native virtual private gateway logs. Restrict the VPN tunnel options to the specific VPN parameters that the virtual private gateway requires.",
+        "Check Amazon CloudWatch logs of the virtual private gateway. Restrict the VPN tunnel options to the specific VPN parameters that the virtual private gateway requires.",
+        "Check Amazon CloudWatch logs of the customer gateway. Restrict the VPN tunnel options to the specific VPN parameters that the customer gateway requires."
+      ],
+      "metadata": {
+        "code": "Question 7"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company is growing rapidly. Data transfers between the company's on-premises systems and Amazon EC2 instances that run in VPCs are limited by the throughput of a single AWS Site-to-Site VPN connection between the company's on-premises data center firewall and an AWS Transit Gateway.\n\nA network engineer must resolve the throttling by designing a solution that is highly available and secure. The solution also must scale the VPN throughput from on premises to the VPC resources to support the increase in traffic.\n\nWhich solution will meet these requirements?",
+      "correct_answer": "Configure multiple dynamic BGP-based Site-to-Site VPN connections to the transit gateway. Configure equal-cost multi-path routing (ECMP).",
+      "incorrect_answers": [
+        "Configure multiple static routing-based Site-to-Site VPN connections to the transit gateway. Configure equal-cost multi-path routing (ECMP).",
+        "Configure a new Site-to-Site VPN connection to the transit gateway. Enable acceleration for the Site-to-Site VPN connection.",
+        "Configure a software appliance-based VPN connection over the internet from the on-premises firewall to an EC2 instance that has a large instance size and networking capabilities."
+      ],
+      "metadata": {
+        "code": "Question 8"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company uses Amazon Route 53 to host a public hosted zone for example.com. A network engineer recently reduced the TTL on several records to 60 seconds. The network engineer wants to assess whether the change has increased the number of queries to Route 53 beyond the expected levels that the company identified before the change. The network engineer must obtain the number of queries that have been made to the example.com public hosted zone.\n\nWhich solution will provide this information?",
+      "correct_answer": "Use Amazon CloudWatch to access the AWS/Route 53 namespace and to check the DNSQueries metric for the public hosted zone.",
+      "incorrect_answers": [
+        "Create a new trail in AWS CloudTrail to include Route 53 data events. Send logs to Amazon CloudWatch Logs. Set up a CloudWatch metric filter to count the number of queries and create graphs.",
+        "Use Amazon CloudWatch to access the AWS/Route 53 Resolver namespace and to check the InboundQueryVolume metric for a specific endpoint.",
+        "Configure logging to Amazon CloudWatch for the public hosted zone. Set up a CloudWatch metric filter to count the number of queries and create graphs."
+      ],
+      "metadata": {
+        "code": "Question 9"
+      }
+    },
+    {
+      "category": "Aws Subset",
+      "type": "multiple",
+      "difficulty": "medium",
+      "question": "A company is establishing connectivity between its on-premises site and an existing VPC on AWS to meet a new security requirement. According to the new requirement, all public DNS queries must use an on-premises DNS security solution. The company's security team has allowed an exception for the AWS service endpoints because the company is using VPC endpoints to access AWS services.\n\nWhich combination of steps should a network engineer take to configure the architecture to meet these requirements? (Choose three.)",
+      "correct_answer": "Create an Amazon Route 53 Resolver outbound endpoint. Associate this endpoint with the VPC.",
+      "incorrect_answers": [
+        "Create a system rule for the domain name “.” (dot) with a target IP address of the on-premises DNS security solution.",
+        "Create a new DHCP options set that provides the IP address of the on-premises DNS security solution. Update the VPC to use this new DHCP options set.",
+        "Create an Amazon Route 53 Resolver inbound endpoint. Associate this endpoint with the VPC."
+      ],
+      "metadata": {
+        "correct_variants": "Create a system rule for the domain name amazonaws.com.||Create a forwarding rule for the domain name “.” (dot) with a target IP address of the on-premises DNS security solution.",
+        "code": "Question 10"
+      }
+    }
+  ]
+}
